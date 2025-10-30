@@ -717,6 +717,7 @@ def upsert_service(request: Dict[str, Any]) -> Union[Services, bool]:
             s.price = request.get('price', s.price)
             s.duration = request.get('duration', s.duration)
             s.washers_needed = request.get('washers_needed', s.washers_needed)
+            s.type = request.get('type', s.type)
             db.session.commit()
             return s
         else:
@@ -725,6 +726,7 @@ def upsert_service(request: Dict[str, Any]) -> Union[Services, bool]:
                 description=request.get('description'),
                 price=request.get('price'),
                 duration=request.get('duration'),
+                type=request.get('type'),
                 washers_needed=request.get('washers_needed')
             )
             db.session.add(s)
@@ -1182,20 +1184,26 @@ def populate():
     # SERVICES
     # ============================================================= 
     services = [
-        ('Small Bike', '', 200, 45, 1),
-        ('Big Bike', '', 300, 45, 1),
-        ('Interior - Sedan', '', 150, 45, 2),
-        ('Exterior - Sedan', '', 250, 45, 2),
-        ('Interior + Exterior - Sedan', '', 300, 90, 2),
-        ('Interior - SUV', '', 300, 45, 2),
-        ('Exterior - SUV', '', 250, 45, 2),
-        ('Interior + Exterior - SUV', '', 400, 90, 2),
-        ('Interior - Van', '', 350, 45, 2),
-        ('Exterior - Van', '', 250, 45, 2),
-        ('Interior + Exterior - Van', '', 500, 90, 2)
+        ('Small Bike',          '', 200, 45, 1, 'Small Bike'),
+        ('Big Bike',            '', 300, 45, 1, 'Big Bike'),
+        ('Interior',            '', 150, 45, 2, 'Sedan'),
+        ('Exterior',            '', 250, 45, 2, 'Sedan'),
+        ('Interior + Exterior', '', 300, 90, 2, 'Sedan'),
+        ('Interior',            '', 300, 45, 2, 'SUV'),
+        ('Exterior',            '', 250, 45, 2, 'SUV'),
+        ('Interior + Exterior', '', 400, 90, 2, 'SUV'),
+        ('Interior',            '', 350, 45, 2, 'Van'),
+        ('Exterior',            '', 250, 45, 2, 'Van'),
+        ('Interior + Exterior', '', 500, 90, 2, 'Van')
     ]
-    for name, desc, price, duration, washers in services:
-        db.session.add(Services(name=name, description=desc, price=price, duration=duration, washers_needed=washers))
+    for name, desc, price, duration, washers, vehicle_type in services:
+        db.session.add(Services(
+            name=name, 
+            description=desc, 
+            price=price, 
+            duration=duration, 
+            washers_needed=washers, 
+            type=vehicle_type))
     db.session.commit()
 
     # =============================================================
@@ -1314,6 +1322,7 @@ def populate():
     vehicles = []
     for cust in customers:
         bike_size = random.choice([0, 1])
+        car_size = random.choice([0, 2])
         small_vehicle = Vehicles(
             plate_number=f'{cust.id}SMB{random.randint(100,999)}',
             model=['Yamaha Mio', 'Kawasaki Ninja'][bike_size],
@@ -1322,8 +1331,8 @@ def populate():
         )
         car_vehicle = Vehicles(
             plate_number=f'{cust.id}CAR{random.randint(100,999)}',
-            model=random.choice(['Toyota Vios', 'Mitsubishi Montero', 'Hyundai Starex']),
-            type=random.choice(['Sedan', 'SUV', 'Van']),
+            model=['Toyota Vios', 'Mitsubishi Montero', 'Hyundai Starex'][car_size],
+            type=['Sedan', 'SUV', 'Van'][car_size],
             customer_id=cust.id
         )
         db.session.add_all([small_vehicle, car_vehicle])
@@ -1555,9 +1564,9 @@ def get_available_bay_and_staff(start_time, duration, washers_needed, recursion_
     return get_available_bay_and_staff(new_start, duration, washers_needed, recursion_depth + 1)
 
 
-def quick_book_walkin(service_id):
+def quick_book(service_id, customer_id=None, vehicle_id=None, appointment_date=None):
     """
-    Quickly books a walk-in customer appointment.
+    Quickly books a appointment.
     Creates temporary account, customer, vehicle, and assigns bay + washers automatically.
     """
     try:
@@ -1568,35 +1577,49 @@ def quick_book_walkin(service_id):
 
         duration = timedelta(minutes=service.duration)
         washers_needed = service.washers_needed
-        now = datetime.now()
 
-        # Get available slot using helper
+        now = datetime.now()
+        if appointment_date: 
+            # Convert appointment_date to datetime if passed as string
+            if isinstance(appointment_date, str):
+                now = datetime.strptime(appointment_date, "%Y-%m-%d %H:%M")
+                now = now.replace(second=0, microsecond=0) # truncate seconds
+
+        # Get available slot
         slot = get_available_bay_and_staff(now, duration, washers_needed)
         if not slot:
             raise ValueError("No available bay or staff found.")
 
-        # Create temporary customer records
-        temp_account = Accounts(
-            first_name="Walk-in",
-            last_name="Customer",
-            email=None,
-            phone_1=None,
-            password_hash=None
-        )
-        db.session.add(temp_account)
-        db.session.flush()
+        # Customer lookup
+        customer = Customers.query.get(customer_id)
+        vehicle = Vehicles.query.get(vehicle_id)
 
-        temp_customer = Customers(account_id=temp_account.id, is_registered=False)
-        db.session.add(temp_customer)
-        db.session.flush()
+        if not customer:
+            
+            # Create temporary customer record
+            account = Accounts(
+                first_name="Walk-in",
+                last_name="Customer",
+                email=None,
+                phone_1=None,
+                password_hash=None
+            )
+            db.session.add(account)
+            db.session.flush()
 
-        temp_vehicle = Vehicles(
-            model="Unknown",
-            type="Motorcycle" if washers_needed == 1 else "Car",
-            customer_id=temp_customer.id
-        )
-        db.session.add(temp_vehicle)
-        db.session.flush()
+            customer = Customers(account_id=account.id, is_registered=False)
+            db.session.add(customer)
+            db.session.flush()
+
+            # Create temporary vehicle record
+            if not vehicle:
+                vehicle = Vehicles(
+                    model="Unknown",
+                    type=service.type,
+                    customer_id=customer.id
+                )
+                db.session.add(vehicle)
+                db.session.flush()
 
         # Status handling
         status = Status.query.filter_by(status="In Queue").first()
@@ -1606,8 +1629,8 @@ def quick_book_walkin(service_id):
             start_time=slot["start_time"],
             end_time=slot["end_time"],
             bay_id=slot["bay"].id,
-            customer_id=temp_customer.id,
-            vehicle_id=temp_vehicle.id,
+            customer_id=customer.id,
+            vehicle_id=vehicle.id,
             service_id=service.id,
             status_id=status.id
         )
@@ -1623,7 +1646,7 @@ def quick_book_walkin(service_id):
             "staff": [s.account.full_name for s in slot["staff"]],
             "start_time": slot["start_time"].strftime("%Y-%m-%d %H:%M"),
             "end_time": slot["end_time"].strftime("%Y-%m-%d %H:%M"),
-            "vehicle_type": temp_vehicle.type
+            "vehicle_type": vehicle.type
         }
 
     except Exception as e:

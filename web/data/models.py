@@ -225,7 +225,7 @@ class Services(db.Model):
     price = db.Column(db.Numeric, nullable=False)
     duration = db.Column(db.Integer, nullable=False)
     washers_needed = db.Column(db.Integer, default=1)
-    type = db.Column(db.String(50), default="Car") #
+    type = db.Column(db.String(50), nullable=True)
 
     created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
     updated_at = db.Column(db.DateTime, default=db.func.current_timestamp(), onupdate=db.func.current_timestamp())

@@ -1025,10 +1025,10 @@ def api_populate():
 @api.route('/quick_book/<int:id>', methods=['GET'])
 def api_quick_book(id):
     try:
-        if 'quick_book_walkin' in globals() and callable(quick_book_walkin):
-            response = quick_book_walkin(id)
+        if 'quick_book' in globals() and callable(quick_book):
+            response = quick_book(id)
             return jsonify({'success': True, 'message': response})
-        return jsonify({'success': False, 'message': 'No quick_book_walkin function found'}), 500
+        return jsonify({'success': False, 'message': 'No quick_book function found'}), 500
     except Exception as e:
         current_app.logger.exception("api_delete_loyalty error")
         return jsonify({'success': False, 'error': str(e)}), 500
