@@ -1,0 +1,736 @@
+{% extends 'shared/layout.html' %}
+{% block title %}
+Settings
+{% endblock %}
+
+{% block css %}{% endblock %}
+
+{% block modal %}
+<div class="modal fade" id="modal-bays">
+    <div class="modal-dialog">
+        <div class="modal-content card bg-secondary shadow">
+            <form>
+                <div class="modal-header card-header bg-white border-0">
+                    <h4 class="card-title">Bay Info</h4>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body card-body">
+                    <div class="row">
+                        <input id="id" name="id" type="text" class="form-control form-control-alternative" hidden value="-1">
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label class="form-control-label">Bay Name</label>
+                                <input id="bay" name="bay" type="text"
+                                    class="form-control form-control-alternative">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-sm btn-danger" data-dismiss="modal">Cancel</button>
+                    <button class="btn btn-sm btn-success" data-dismiss="modal" onclick="SaveBay()">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="modal-roles">
+    <div class="modal-dialog">
+        <div class="modal-content card bg-secondary shadow">
+            <form>
+                <div class="modal-header card-header bg-white border-0">
+                    <h4 class="card-title">Role Info</h4>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body card-body">
+                    <div class="row">
+                        <input id="id" name="id" type="text" class="form-control form-control-alternative" hidden value="-1">
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label class="form-control-label">Role</label>
+                                <input id="role" name="role" type="text"
+                                    class="form-control form-control-alternative">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-sm btn-danger" data-dismiss="modal">Cancel</button>
+                    <button class="btn btn-sm btn-success" data-dismiss="modal" onclick="SaveRole()">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="modal-status">
+    <div class="modal-dialog">
+        <div class="modal-content card bg-secondary shadow">
+            <form>
+                <div class="modal-header card-header bg-white border-0">
+                    <h4 class="card-title">Status Info</h4>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body card-body">
+                    <div class="row">
+                        <input id="id" name="id" type="text" class="form-control form-control-alternative" hidden value="-1">
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label class="form-control-label">Status</label>
+                                <input id="status" name="status" type="text"
+                                    class="form-control form-control-alternative">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-sm btn-danger" data-dismiss="modal">Cancel</button>
+                    <button class="btn btn-sm btn-success" data-dismiss="modal" onclick="SaveStatus()">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="modal-services">
+    <div class="modal-dialog">
+        <div class="modal-content card bg-secondary shadow">
+            <form>
+                <div class="modal-header card-header bg-white border-0">
+                    <h4 class="card-title">Service Info</h4>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body card-body">
+                    <div class="row">
+                        <input id="id" name="id" type="text" class="form-control form-control-alternative" hidden value="-1">
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label class="form-control-label">Service Name</label>
+                                <input id="name" name="name" type="text"
+                                    class="form-control form-control-alternative">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label class="form-control-label">Description</label>
+                                <input id="description" name="description" type="text"
+                                    class="form-control form-control-alternative">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label class="form-control-label">Price</label>
+                                <input id="price" name="price" type="number"
+                                    class="form-control form-control-alternative">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label class="form-control-label">Duration</label>
+                                <input id="duration" name="duration" type="number"
+                                    class="form-control form-control-alternative">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-sm btn-danger" data-dismiss="modal">Cancel</button>
+                    <button class="btn btn-sm btn-success" data-dismiss="modal" onclick="SaveService()">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="main-content" id="panel">
+    <!-- Header -->
+    <div class="header bg-primary pb-6">
+        <div class="container-fluid">
+            <div class="header-body">
+                <div class="row align-items-center py-4">
+                    <div class="col-lg-6 col-7">
+                        <p class="display-2 text-white d-inline-block mb-0">Settings</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Page content -->
+    <div class="container-fluid mt--6">
+        <div class="row">
+            <div class="col">
+                <div class="card">
+                    <div class="card-header border-0">
+                        <div class="row align-items-center">
+                            <div class="col">
+                                <p class="display-4 d-inline-block mb-0">Services</p>
+                            </div>
+                            <div class="col text-right">
+                                <button class="btn btn-sm btn-primary" onclick="AddNewService()">Add New</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <!-- Projects table -->
+                        <table class="table align-items-center table-flush">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th scope="col">ID</th>
+                                    <th scope="col">Service Name</th>
+                                    <th scope="col">Description</th>
+                                    <th scope="col">Price</th>
+                                    <th scope="col">Duration</th>
+                                    <th scope="col" class="text-right">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for service in data.services %}
+                                <tr id='service-{{service.id}}' data-id={{service.id}}>
+                                    <th scope="row">
+                                        {{service.id}}
+                                    </th>
+                                    <td>
+                                        {{service.name}}
+                                    </td>
+                                    <td>
+                                        {{service.description}}
+                                    </td>
+                                    <td>
+                                        {{service.price}}
+                                    </td>
+                                    <td>
+                                        {{service.duration}}
+                                    </td>
+                                    <td class="text-right">
+                                        <button onclick='EditService(this)' class="btn btn-warning btn-sm" >Edit</button>
+                                        <button onclick='DeleteService(this)' class="btn btn-danger btn-sm">Delete</button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col">
+                <div class="card">
+                    <div class="card-header border-0">
+                        <div class="row align-items-center">
+                            <div class="col">
+                                <p class="display-4 d-inline-block mb-0">Bays</p>
+                            </div>
+                            <div class="col text-right">
+                                <button class="btn btn-sm btn-primary" onclick="AddNewBay()">Add New</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <!-- Projects table -->
+                        <table class="table align-items-center table-flush">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th scope="col">ID</th>
+                                    <th scope="col">Bay</th>
+                                    <th scope="col" class="text-right">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for bay in data.bays %}
+                                <tr id='bay-{{bay.id}}' data-id={{bay.id}}>
+                                    <th scope="row">
+                                        {{bay.id}}
+                                    </th>
+                                    <td>
+                                        {{bay.bay}}
+                                    </td>
+                                    <td class="text-right">
+                                        <button onclick='EditBay(this)' class="btn btn-warning btn-sm" >Edit</button>
+                                        <button onclick='DeleteBay(this)' class="btn btn-danger btn-sm">Delete</button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="col">
+                <div class="card">
+                    <div class="card-header border-0">
+                        <div class="row align-items-center">
+                            <div class="col">
+                                <p class="display-4 d-inline-block mb-0">Roles</p>
+                            </div>
+                            <div class="col text-right">
+                                <button class="btn btn-sm btn-primary" onclick="AddNewRole()">Add New</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <!-- Projects table -->
+                        <table class="table align-items-center table-flush">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th scope="col">ID</th>
+                                    <th scope="col">Role</th>
+                                    <th scope="col" class="text-right">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for role in data.roles %}
+                                <tr id='role-{{role.id}}' data-id={{role.id}}>
+                                    <th scope="row">
+                                        {{role.id}}
+                                    </th>
+                                    <td>
+                                        {{role.role}}
+                                    </td>
+                                    <td class="text-right">
+                                        {% if role.id <= 3 %}
+                                            <button onclick='EditRole(this)' class="btn btn-warning btn-sm"  disabled>Edit</button>
+                                            <button onclick='DeleteRole(this)' class="btn btn-danger btn-sm" disabled>Delete</button>
+                                        {% else %}
+                                            <button onclick='EditRole(this)' class="btn btn-warning btn-sm" >Edit</button>
+                                            <button onclick='DeleteRole(this)' class="btn btn-danger btn-sm">Delete</button>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="col">
+                <div class="card">
+                    <div class="card-header border-0">
+                        <div class="row align-items-center">
+                            <div class="col">
+                                <p class="display-4 d-inline-block mb-0">Status</p>
+                            </div>
+                            <div class="col text-right">
+                                <button class="btn btn-sm btn-primary" onclick="AddNewStatus()">Add New</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <!-- Projects table -->
+                        <table class="table align-items-center table-flush">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th scope="col">ID</th>
+                                    <th scope="col">Status</th>
+                                    <th scope="col" class="text-right">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for status in data.status %}
+                                <tr id='status-{{status.id}}' data-id={{status.id}}>
+                                    <th scope="row">
+                                        {{status.id}}
+                                    </th>
+                                    <td>
+                                        {{status.status}}
+                                    </td>
+                                    <td class="text-right">
+                                        {% if status.id <= 11 %}
+                                            <button onclick='EditStatus(this)' class="btn btn-warning btn-sm"  disabled>Edit</button>
+                                            <button onclick='DeleteStatus(this)' class="btn btn-danger btn-sm" disabled>Delete</button>
+                                        {% else %}
+                                            <button onclick='EditStatus(this)' class="btn btn-warning btn-sm" >Edit</button>
+                                            <button onclick='DeleteStatus(this)' class="btn btn-danger btn-sm">Delete</button>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+
+    setSideBar('#menu-settings')
+
+    var modal_services  = '#modal-services'
+    var modal_bays      = '#modal-bays'
+    var modal_roles     = '#modal-roles'
+    var modal_status    = '#modal-status'
+
+    // ======================================================================================================================
+
+    var AddNewService = function () {
+
+        $('#id').val('-1')
+        $('#name').val('')
+        $('#description').val('')
+        $('#price').val('')
+        $('#duration').val('')
+
+        $(modal_services).modal({
+            "backdrop": "static",
+            "keyboard": true,
+            "show": true
+        })
+
+    }
+
+    var SaveService = function () {
+
+        data = {
+            'id'            : $('#id').val(),
+            'name'          : $('#name').val(),
+            'description'   : $('#description').val(),
+            'price'         : $('#price').val(),
+            'duration'      : $('#duration').val()
+        }
+
+        Controller.POST('/api/service/upsert', data).done(function (result) {
+            console.log(result)
+            if (result.success) {
+                e = document.getElementById('service-' + data.id)
+                if (e == null) {
+                    location.reload()
+                }
+                else {
+                    e.childNodes[1].innerHTML = data.id
+                    e.childNodes[3].innerHTML = data.name
+                    e.childNodes[5].innerHTML = data.description
+                    e.childNodes[7].innerHTML = data.price
+                    e.childNodes[9].innerHTML = data.duration
+                }
+            }
+        })
+
+    }
+
+    var EditService = function (e) {
+
+        id = e.parentNode.parentNode.dataset.id
+
+        Controller.GET('/api/service/get/' + id, {}).done(function (result) {
+
+            $('#id').val(result.id)
+            $('#name').val(result.name)
+            $('#description').val(result.description)
+            $('#price').val(result.price)
+            $('#duration').val(result.duration)
+
+            $(modal_services).modal({
+                "backdrop": "static",
+                "keyboard": true,
+                "show": true
+            })
+
+        })
+
+    }
+
+    var DeleteService = function (e) {
+
+        id = e.parentNode.parentNode.dataset.id
+
+        bootbox.confirm({
+            message: "Delete item?",
+            buttons: {
+                confirm: {
+                    label: 'Delete',
+                    className: 'btn-sm btn-danger'
+                },
+                cancel: {
+                    label: 'Cancel',
+                    className: 'btn-sm btn-info'
+                }
+            },
+            callback: function (result) {
+                if (result) {
+
+                    Controller.POST('/api/service/delete', { 'id': id }).done(function (result) {
+                        if (result.success) e.parentNode.parentNode.remove()
+                    })
+
+                }
+            }
+        })
+    }
+
+    // ======================================================================================================================
+
+    var AddNewBay = function () {
+
+        $('#id').val('-1')
+        $('#bay').val('')
+
+        $(modal_bays).modal({
+            "backdrop": "static",
+            "keyboard": true,
+            "show": true
+        })
+
+    }
+
+    var SaveBay = function () {
+
+        data = {
+            'id'    : $('#id').val(),
+            'bay'  : $('#bay').val()
+        }
+
+        Controller.POST('/api/bay/upsert', data).done(function (result) {
+            console.log(result)
+            if (result.success) {
+                e = document.getElementById('bay-' + data.id)
+                if (e == null) {
+                    location.reload()
+                }
+                else {
+                    e.childNodes[1].innerHTML = data.id
+                    e.childNodes[3].innerHTML = data.bay
+                }
+            }
+        })
+
+    }
+
+    var EditBay = function (e) {
+
+        id = e.parentNode.parentNode.dataset.id
+
+        Controller.GET('/api/bay/get/' + id, {}).done(function (result) {
+
+            $('#id').val(result.id)
+            $('#bay').val(result.bay)
+
+            $(modal_bays).modal({
+                "backdrop": "static",
+                "keyboard": true,
+                "show": true
+            })
+
+        })
+
+    }
+
+    var DeleteBay = function (e) {
+
+        id = e.parentNode.parentNode.dataset.id
+
+        bootbox.confirm({
+            message: "Delete item?",
+            buttons: {
+                confirm: {
+                    label: 'Delete',
+                    className: 'btn-sm btn-danger'
+                },
+                cancel: {
+                    label: 'Cancel',
+                    className: 'btn-sm btn-info'
+                }
+            },
+            callback: function (result) {
+                if (result) {
+
+                    Controller.POST('/api/bay/delete', { 'id': id }).done(function (result) {
+                        if (result.success) e.parentNode.parentNode.remove()
+                    })
+
+                }
+            }
+        })
+    }
+
+    // ======================================================================================================================
+
+    var AddNewRole = function () {
+
+        $('#id').val('-1')
+        $('#role').val('')
+
+        $(modal_roles).modal({
+            "backdrop": "static",
+            "keyboard": true,
+            "show": true
+        })
+
+    }
+
+    var SaveRole = function () {
+
+        data = {
+            'id'    : $('#id').val(),
+            'role'  : $('#role').val()
+        }
+
+        Controller.POST('/api/role/upsert', data).done(function (result) {
+            console.log(result)
+            if (result.success) {
+                e = document.getElementById('role-' + data.id)
+                if (e == null) {
+                    location.reload()
+                }
+                else {
+                    e.childNodes[1].innerHTML = data.id
+                    e.childNodes[3].innerHTML = data.role
+                }
+            }
+        })
+
+    }
+
+    var EditRole = function (e) {
+
+        id = e.parentNode.parentNode.dataset.id
+
+        Controller.GET('/api/role/get/' + id, {}).done(function (result) {
+
+            $('#id').val(result.id)
+            $('#role').val(result.role)
+
+            $(modal_roles).modal({
+                "backdrop": "static",
+                "keyboard": true,
+                "show": true
+            })
+
+        })
+
+    }
+
+    var DeleteRole = function (e) {
+
+        id = e.parentNode.parentNode.dataset.id
+
+        bootbox.confirm({
+            message: "Delete item?",
+            buttons: {
+                confirm: {
+                    label: 'Delete',
+                    className: 'btn-sm btn-danger'
+                },
+                cancel: {
+                    label: 'Cancel',
+                    className: 'btn-sm btn-info'
+                }
+            },
+            callback: function (result) {
+                if (result) {
+
+                    Controller.POST('/api/role/delete', { 'id': id }).done(function (result) {
+                        if (result.success) e.parentNode.parentNode.remove()
+                    })
+
+                }
+            }
+        })
+    }
+
+    // ======================================================================================================================
+
+    var AddNewStatus = function () {
+
+        $('#id').val('-1')
+        $('#status').val('')
+
+        $(modal_status).modal({
+            "backdrop": "static",
+            "keyboard": true,
+            "show": true
+        })
+
+    }
+
+    var SaveStatus = function () {
+
+        data = {
+            'id': $('#id').val(),
+            'status': $('#status').val()
+        }
+
+        Controller.POST('/api/status/upsert', data).done(function (result) {
+            console.log(result)
+            if (result.success) {
+                e = document.getElementById('status-' + data.id)
+                if (e == null) {
+                    location.reload()
+                }
+                else {
+                    e.childNodes[1].innerHTML = data.id
+                    e.childNodes[3].innerHTML = data.status
+                }
+            }
+        })
+
+    }
+
+    var EditStatus = function (e) {
+
+        id = e.parentNode.parentNode.dataset.id
+
+        Controller.GET('/api/status/get/' + id, {}).done(function (result) {
+
+            $('#id').val(result.id)
+            $('#status').val(result.status)
+
+            $(modal_status).modal({
+                "backdrop": "static",
+                "keyboard": true,
+                "show": true
+            })
+
+        })
+
+    }
+
+    var DeleteStatus = function (e) {
+
+        id = e.parentNode.parentNode.dataset.id
+
+        bootbox.confirm({
+            message: "Delete item?",
+            buttons: {
+                confirm: {
+                    label: 'Delete',
+                    className: 'btn-sm btn-danger'
+                },
+                cancel: {
+                    label: 'Cancel',
+                    className: 'btn-sm btn-info'
+                }
+            },
+            callback: function (result) {
+                if (result) {
+
+                    Controller.POST('/api/status/delete', { 'id': id }).done(function (result) {
+                        if (result.success) e.parentNode.parentNode.remove()
+                    })
+
+                }
+            }
+        })
+    }
+
+</script>
+{% endblock %}

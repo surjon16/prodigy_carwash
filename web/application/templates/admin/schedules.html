@@ -1,0 +1,397 @@
+{% extends 'shared/layout.html' %}
+{% block title %}
+Settlement Schedules
+{% endblock %}
+
+{% block css %}
+    <style>
+        .bg-late {
+            background-color: 	#ff7b7b;
+            color: white;
+        }
+    </style>
+{% endblock %}
+
+{% block modal %}
+<div class="modal fade" id="modal-default">
+    <div class="modal-dialog">
+        <div class="modal-content card bg-secondary shadow">
+                <div class="modal-header card-header bg-white border-0">
+                    <h4 class="card-title">Schedule Information</h4>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body card-body">
+                    <div class="row">
+                        <input id="id" name="id" type="text" class="form-control form-control-alternative" hidden
+                            value="-1">
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label class="form-control-label">Case Number <span id="incident_id_error" class="h5 text-danger"></span></label>
+                                <select id="incident_id" name="incident_id" data-style="bg-white px-4 py-3 shadow-sm" class="form-control form-control-alternative selectpicker" data-live-search="true">
+                                    {% for incident in data.incidents %}
+                                        <option value="{{incident.id}}">{{incident.case_number}} ({{incident.case_title}} at {{incident.location}})</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label class="form-control-label">Details <span id="details_error" class="h5 text-danger"></span></label>
+                                <textarea id="details" name="details" type="text" class="form-control form-control-alternative" rows="20"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label for="schedule" class="form-control-label">Schedule <span id="schedule_error" class="h5 text-danger"></span></label>
+                                <input class="form-control form-control-alternative" type="datetime-local" id="schedule">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label class="form-control-label">Assigned Lupon <span id="assigned_lupon_error" class="h5 text-danger"></span></label>
+                                <select id="assigned_lupon" name="assigned_lupon" multiple data-style="bg-white px-4 py-3 shadow-sm" class="form-control form-control-alternative selectpicker" data-live-search="true">
+                                    {% for lupon in data.lupon %}
+                                        <option value="{{lupon.id}}">{{lupon.first_name}} {{lupon.last_name}}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-sm btn-danger" data-dismiss="modal">Cancel</button>
+                    <button class="btn btn-sm btn-success" onclick="Save()">Save</button>
+                </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="modal-hearing">
+    <div class="modal-dialog">
+        <div class="modal-content card bg-secondary shadow">
+            <div class="modal-header card-header bg-white border-0">
+                <h4 class="card-title">Minutes of Hearing</h4>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body card-body">
+                <input id="schedule_id" type="hidden" value="-1">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label class="form-control-label">Minutes of Hearing <span id="minutes_error" class="h5 text-danger"></span></label>
+                            <textarea id="minutes" name="minutes" type="text" class="form-control form-control-alternative" rows="15"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label class="form-control-label">Status <span id="status_id_error" class="h5 text-danger"></span></label>
+                            <select id="status_id" name="status_id" data-style="bg-white px-4 py-3 shadow-sm" class="form-control form-control-alternative selectpicker" data-live-search="true">
+                                {% for status in data.status %}
+                                <option value="{{status.id}}">{{status.status}}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-sm btn-danger" data-dismiss="modal">Cancel</button>
+                <button class="btn btn-sm btn-success" onclick="SaveHearing()">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="main-content" id="panel">
+    <!-- Header -->
+    <div class="header bg-primary pb-6">
+        <div class="container-fluid">
+            <div class="header-body">
+                <div class="row align-items-center py-4">
+                    <div class="col-lg-6 col-7">
+                        <p class="display-2 text-white d-inline-block mb-0">Settlement Schedules</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Page content -->
+    <div class="container-fluid mt--6">
+        <div class="row">
+            <div class="col">
+                <div class="card">
+                    <div class="card-header border-0">
+                        <div class="row align-items-center">
+                            <div class="col text-left">
+                                <button class="btn btn-sm btn-primary" onclick="AddNew()">Add New</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <!-- Projects table -->
+                        <table class="table align-items-center table-flush">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th scope="col">Case Number</th>
+                                    <th scope="col">Case Title</th>
+                                    <th scope="col">Schedule</th>
+                                    <th scope="col">Status</th>
+                                    <th scope="col" class="text-right">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for schedule in data.schedules %}
+                                    <tr id='schedule-{{schedule.id}}' data-id={{schedule.id}}>
+                                        <th scope="row">
+                                            {{schedule.incident.case_number}}
+                                        </th>
+                                        <td>
+                                            {{schedule.incident.case_title}}
+                                        </td>
+                                        <td>
+                                            {% if schedule.schedule is not none %}
+                                                {{schedule.schedule.strftime('%h %d %Y %I:%M %p')}}
+                                            {% else %}
+                                                None
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if schedule.schedule >= data.current_date or schedule.minutes is not none %}
+                                                <span class="badge badge-lg badge-info mb-1">{{schedule.incident.status.status}}</span>
+                                            {% endif %}
+
+                                            {% if schedule.schedule < data.current_date %}
+
+                                                {% if schedule.minutes is not none %}
+                                                    <span type='button' onclick="UpsertHearing(this, 1, '{{ schedule.id }}')" class="badge badge-lg badge-success d-block">Click here to edit minutes</span>
+                                                {% else %}
+                                                    <span class="badge badge-lg badge-danger d-block mb-1">No Minutes of Hearing</span>
+                                                    <span type='button' onclick="UpsertHearing(this, 0, '{{ schedule.id }}')" class="badge badge-lg badge-success d-block">Click here to add minutes</span>
+                                                {% endif %}
+
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-right">
+                                            <a href="/admin/schedule/{{schedule.id}}" class="btn btn-info btn-sm"><i class="fa fa-eye"></i></a>
+                                            <button onclick='Edit(this)' class="btn btn-warning btn-sm"><i class="fa fa-edit"></i></button>
+                                            <button onclick='Delete(this)' class="btn btn-danger btn-sm"><i class="fa fa-trash"></i></button>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+
+    setSideBar('#menu-schedules')
+
+    var modal           = '#modal-default'
+    var modal_hearing   = '#modal-hearing'
+
+    var notice = 
+        'NOTICE OF HEARING' +
+        ('\n') +
+        '(MEDIATION PROCEEDINGS)' +
+        ('\n') +
+        ('\n') +
+        'TO: <FULL NAME>' +
+        ('\n') +
+        '<ADDRESS>' +
+        ('\n') +
+        '<(Complainant)>' +
+        ('\n') +
+        ('\n') +
+        'You are hereby required to appear at Kauswagan Barangay Hall on the ______________ day of ______________ at ______________ for a hearing of your complaint.'
+
+    var AddNew = function () {
+
+        $('#incident_id_error').html('')
+        $('#details_error').html('')
+        $('#schedule_error').html('')
+        $('#assigned_lupon_error').html('')
+
+        $('#id').val('-1')        
+        $(".selectpicker").selectpicker('deselectAll')
+        $(".selectpicker").selectpicker('val', [])
+        $('#details').html(notice)
+        $('#schedule').val('')
+
+        $(modal).modal({
+            "backdrop": "static",
+            "keyboard": true,
+            "show": true
+        })
+
+    }
+
+    var Save = function () {
+
+        data = {
+            'id'                : $('#id').val(),
+            'incident_id'       : $('#incident_id').val(),
+            'details'           : $('#details').val(),
+            'schedule'          : $('#schedule').val(),
+            'assigned_lupon'    : JSON.stringify($('#assigned_lupon').val()),
+            'assigned_lupon_1'  : $('#assigned_lupon').val()[0] == undefined ? '' : $('#assigned_lupon').val()[0],
+        }
+
+        $('#incident_id_error').html('')
+        $('#details_error').html('')
+        $('#schedule_error').html('')
+        $('#assigned_lupon_error').html('')
+
+        Controller.POST('/api/schedule/upsert', data).done(function (result) {
+            console.log(data, result)
+            if (result.success == true) {
+                location.reload()
+            }
+            else {
+                
+                if (result.errors.incident_id) $('#incident_id_error').html(result.errors.incident_id)               
+                if (result.errors.details) $('#details_error').html(result.errors.details)               
+                if (result.errors.schedule) $('#schedule_error').html(result.errors.schedule)               
+                if (result.errors.assigned_lupon_1) $('#assigned_lupon_error').html(result.errors.assigned_lupon_1)               
+            }
+        })
+
+    }
+
+    var Edit = function (e) {
+
+        $('#incident_id_error').html('')
+        $('#details_error').html('')
+        $('#schedule_error').html('')
+        $('#assigned_lupon_error').html('')
+
+        id = e.parentNode.parentNode.dataset.id
+
+        Controller.GET('/api/schedule/get/' + id, {}).done(function (result) {
+
+            $('#id').val(result.id)
+            $("#incident_id").selectpicker('val', result.incident_id)
+            $('#details').val(result.details)
+            $('#schedule').val(result.schedule)
+            $('#assigned_lupon').selectpicker('val', JSON.parse(result.lupon))
+
+            $(modal).modal({
+                "backdrop": "static",
+                "keyboard": true,
+                "show": true
+            })
+
+        })
+
+    }
+
+    var Delete = function (e) {
+
+        id = e.parentNode.parentNode.dataset.id
+
+        bootbox.confirm({
+            message: "Delete item?",
+            buttons: {
+                confirm: {
+                    label: 'Delete',
+                    className: 'btn-sm btn-danger'
+                },
+                cancel: {
+                    label: 'Cancel',
+                    className: 'btn-sm btn-info'
+                }
+            },
+            callback: function (result) {
+                if (result) {
+
+                    Controller.POST('/api/schedule/delete', { 'id': id }).done(function (result) {
+                        if (result.success) e.parentNode.parentNode.remove()
+                    })
+
+                }
+            }
+        })
+    }
+
+    // ===============================
+
+    var UpsertHearing = function(el, inEditMode, schedule_id) {
+
+        $('#minutes_error').html('')
+        $('#status_id_error').html('')
+
+        if(!inEditMode) {
+
+            $('#schedule_id').val(schedule_id)
+            $(".selectpicker").selectpicker('deselectAll')
+            $(".selectpicker").selectpicker('val', [])
+            $('#minutes').html('')
+
+        }
+        else {
+
+            
+            Controller.GET('/api/schedule/get/' + schedule_id, {}).done(function (result) {
+
+                $('#schedule_id').val(schedule_id)
+                $("#status_id").selectpicker('val', result.incident_status_id)
+                $('#minutes').html(result.minutes)
+
+            })
+
+        }
+        
+        $(modal_hearing).modal({
+            "backdrop": "static",
+            "keyboard": true,
+            "show": true
+        })
+
+    }
+
+    var SaveHearing = function() {
+
+        $('#minutes_error').html('')
+        $('#status_id_error').html('')
+
+        data = {
+            'id'        : $('#schedule_id').val(),
+            'minutes'   : $('#minutes').val(),
+            'status_id' : $('#status_id').val()
+        }
+
+        console.log(data)
+
+        Controller.POST('/api/schedule/hearing/upsert', data).done(function (result) {
+            if (result.success == true) {
+                location.reload()
+            }
+            else {
+                if (result.errors.minutes) $('#minutes_error').html(result.errors.minutes)
+                if (result.errors.status_id) $('#status_id_error').html(result.errors.status_id)
+            }
+            
+        })
+
+    }
+
+</script>
+{% endblock %}

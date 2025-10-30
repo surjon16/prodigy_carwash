@@ -1,0 +1,80 @@
+{% extends 'shared/layout.html' %}
+{% block title %}
+    Home
+{% endblock %}
+
+{% block css %}{% endblock %}
+
+{% block content %}
+<div class="main-content" id="panel">
+    <!-- Header -->
+    <div class="header bg-primary pb-6">
+        <div class="container-fluid">
+            <div class="header-body">
+                <div class="row align-items-center py-4">
+                    <div class="col-lg-6 col-7">
+                        <p class="display-2 text-white d-inline-block mb-0">Customer Feedbacks</p>
+                    </div>
+                </div>
+            </div>  
+        </div>
+    </div>
+
+    <!-- Page content -->
+    <div class="container-fluid mt--6">
+        <div class="row">
+            <div class="col">
+                <div class="card">
+                    <div class="card-header border-0">
+                        <h4 class="card-title"></h4>
+                    </div>
+                    <div class="table-responsive">
+                        <!-- Projects table -->
+                        <table class="table align-items-center table-flush">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th scope="col">Feedback</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for feedback in feedbacks | sort(attribute="start_time", reverse=true) %}
+                                    <tr>
+                                        <th scope="row">
+                                            <div class="media align-items-center">
+                                                <a href="#" class="avatar rounded-circle mr-3">
+                                                    <img alt="Image placeholder" src={{url_for('static', filename=feedback.customer.account.image_profile)}} />
+                                                </a>
+                                                <div class="media-body">
+                                                    <blockquote class="blockquote my-0">
+                                                        <p class="mb-0">
+                                                            {% for i in range(feedback.rating) %}
+                                                                <i class="fa fa-star fa-lg text-yellow" aria-hidden="true"></i>
+                                                            {% endfor %}
+                                                        </p>
+                                                        <p class="my-0 lead">{{ feedback.comment }}</p>
+                                                        <footer class="blockquote-footer">{{ feedback.customer.account.first_name }} {{ feedback.customer.account.last_name }}<cite title="Source Title"></cite></footer>
+                                                    </blockquote>
+                                                    <p class="my-0 small">{{ feedback.created_at | humanize_ts }}</p>
+                                                </div>
+                                            </div>
+                                        </th>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    
+    setSideBar('#menu-feedbacks');
+
+</script>
+
+{% endblock %}

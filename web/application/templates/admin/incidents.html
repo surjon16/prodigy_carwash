@@ -1,0 +1,345 @@
+{% extends 'shared/layout.html' %}
+{% block title %}
+Case Records
+{% endblock %}
+
+{% block css %}{% endblock %}
+
+{% block modal %}
+<div class="modal fade" id="modal-default">
+    <div class="modal-dialog">
+        <div class="modal-content card bg-secondary shadow">
+                <div class="modal-header card-header bg-white border-0">
+                    <h4 class="card-title">Case Information</h4>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body card-body">
+                    <div class="row">
+                        <input id="id" name="id" type="text" class="form-control form-control-alternative" hidden value="-1">
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label class="form-control-label">Case Number <span id="case_number_error" class="h5 text-danger"></span></label>
+                                <input id="case_number" name="case_number" type="text" class="form-control form-control-alternative" disabled>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label class="form-control-label">Case Title <span id="case_title_error" class="h5 text-danger"></span></label>
+                                <input id="case_title" name="case_title" type="text" class="form-control form-control-alternative">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label class="form-control-label">Case Location <span id="location_error" class="h5 text-danger"></span></label>
+                                <input id="location" name="location" type="text" class="form-control form-control-alternative">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label class="form-control-label">Facts of the Complaint<span id="narrative_error" class="h5 text-danger"></span></label>
+                                <textarea id="narrative" name="narrative" type="text" class="form-control form-control-alternative" rows="20"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label for="date_reported" class="form-control-label">Date Reported <span id="date_reported_error" class="h5 text-danger"></span></label>
+                                <input class="form-control form-control-alternative" type="datetime-local" id="date_reported">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label for="date_incident" class="form-control-label">Incident Date<span id="date_incident_error" class="h5 text-danger"></span></label>
+                                <input class="form-control form-control-alternative" type="datetime-local" id="date_incident">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label class="form-control-label">Status <span id="status_id_error" class="h5 text-danger"></span></label>
+                                <select id="status_id" name="status_id" data-style="bg-white px-4 py-3 shadow-sm" class="form-control form-control-alternative selectpicker" data-live-search="true">
+                                    {% for status in data.status %}
+                                        <option value="{{status.id}}">{{status.status}}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label class="form-control-label">Complainant <span id="complainant_error" class="h5 text-danger"></span></label>
+                                <select id="complainant" name="complainant" data-style="bg-white px-4 py-3 shadow-sm" class="form-control form-control-alternative selectpicker" data-live-search="true">
+                                    {% for account in data.accounts %}
+                                        {% if account.role_id is none or account.role_id == 3 %}
+                                            <option value="{{account.id}}">({{account.id}}) {{account.first_name}} {{account.last_name}}</option>
+                                        {% endif %}
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label class="form-control-label">Respondent <span id="respondent_error" class="h5 text-danger"></span></label>
+                                <input id="respondent" name="respondent" type="text" class="form-control form-control-alternative">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-sm btn-danger" data-dismiss="modal">Cancel</button>
+                    <button class="btn btn-sm btn-success" onclick="Save()">Save</button>
+                </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="main-content" id="panel">
+    <!-- Header -->
+    <div class="header bg-primary pb-6">
+        <div class="container-fluid">
+            <div class="header-body">
+                <div class="row align-items-center py-4">
+                    <div class="col-lg-6 col-7">
+                        <p class="display-2 text-white d-inline-block mb-0">Case Records</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Page content -->
+    <div class="container-fluid mt--6">
+        <div class="row">
+            <div class="col">
+                <div class="card">
+                    <div class="card-header border-0">
+                        <div class="row align-items-center">
+                            <div class="col text-left">
+                                <button class="btn btn-sm btn-primary" onclick="AddNew()">Add New</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <!-- Projects table -->
+                        <table class="table align-items-center table-flush">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th scope="col">Case Title (Number)</th>
+                                    <th scope="col">Status</th>
+                                    <th scope="col">Date Recorded</th>
+                                    <th scope="col">Case Date</th>
+                                    <th scope="col" class="text-right">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for incident in data.incidents %}
+                                    <tr id='incident-{{incident.id}}' data-id={{incident.id}}>
+                                        <th scope="row">
+                                            {{incident.case_title}} ({{incident.case_number}})
+                                        </th>
+                                        <td>
+                                            {{incident.status.status}}
+                                        </td>
+                                        <td>
+                                            {% if incident.date_reported is not none %}
+                                                {{incident.date_reported.strftime('%h %d %Y %I:%M %p')}}
+                                            {% else %}
+                                                None
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if incident.date_incident is not none %}
+                                                {{incident.date_incident.strftime('%h %d %Y %I:%M %p')}}
+                                            {% else %}
+                                                None
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-right">
+                                            <a href="/admin/incident/{{incident.id}}" class="btn btn-sm btn-info"><i class="fa fa-eye"></i></a>
+                                            <button onclick='Edit(this)' class="btn btn-warning btn-sm"><i class="fa fa-edit"></i></button>
+                                            <button onclick='Delete(this)' class="btn btn-danger btn-sm"><i class="fa fa-trash"></i></button>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+
+    setSideBar('#menu-incidents')
+
+    var modal = '#modal-default'
+
+    var AddNew = function () {
+
+        // $('#case_number_error').html('')
+        $('#case_title_error').html('')
+        $('#location_error').html('')
+        $('#narrative_error').html('')
+        $('#date_reported_error').html('')
+        $('#date_incident_error').html('')
+        $('#status_id_error').html('')
+        $('#complainant_error').html('')
+        $('#respondent_error').html('')
+
+        $('#id').val('-1')
+        $('#case_number').val('{{((data.incidents|length + 1)|string).zfill(4)}} -- {{now.year}}')
+        $('#case_title').val('')
+        $('#location').val('')
+        $('#narrative').val('')
+        $('#date_reported').val('')
+        $('#date_incident').val('')
+        
+        $(".selectpicker").selectpicker('deselectAll');
+        $(".selectpicker").selectpicker('val', []);
+
+        $('#respondent').val('')
+
+        $(modal).modal({
+            "backdrop": "static",
+            "keyboard": true,
+            "show": true
+        })
+
+    }
+
+    var Save = function () {
+
+        $('#case_number_error').html('')
+        $('#case_title_error').html('')
+        $('#location_error').html('')
+        $('#narrative_error').html('')
+        $('#date_reported_error').html('')
+        $('#date_incident_error').html('')
+        $('#status_id_error').html('')
+        $('#complainant_error').html('')
+        $('#respondent_error').html('')
+
+        data = {
+            'id'            : $('#id').val(),
+            'case_number'   : $('#case_number').val(),
+            'case_title'    : $('#case_title').val(),
+            'location'      : $('#location').val(),
+            'narrative'     : $('#narrative').val(),
+            'date_reported' : $('#date_reported').val(),
+            'date_incident' : $('#date_incident').val(),
+            'status_id'     : $('#status_id').val(),
+            'complainant'   : $('#complainant').val(),
+            'respondent'    : $('#respondent').val()
+        }
+
+        Controller.POST('/api/incident/upsert', data).done(function(result) {
+            console.log(result)
+            if(result.success == true) {
+                location.reload()
+            }
+            else {
+
+                if (result.errors.case_number) $('#case_number_error').html(result.errors.case_number)
+                if (result.errors.case_title) $('#case_title_error').html(result.errors.case_title)
+                if (result.errors.location) $('#location_error').html(result.errors.location)
+                if (result.errors.narrative) $('#narrative_error').html(result.errors.narrative)
+                if (result.errors.date_reported) $('#date_reported_error').html(result.errors.date_reported)
+                if (result.errors.date_incident) $('#date_incident_error').html(result.errors.date_incident)
+                if (result.errors.status_id) $('#status_id_error').html(result.errors.status_id)
+                if (result.errors.complainant) $('#complainant_error').html(result.errors.complainant)
+                if (result.errors.respondent) $('#respondent_error').html(result.errors.respondent)
+
+            }
+
+        })
+
+    }
+
+    var Edit = function (e) {
+
+        $('#case_number_error').html('')
+        $('#case_title_error').html('')
+        $('#location_error').html('')
+        $('#narrative_error').html('')
+        $('#date_reported_error').html('')
+        $('#date_incident_error').html('')
+        $('#status_id_error').html('')
+        $('#complainant_error').html('')
+        $('#respondent_error').html('')
+
+        id = e.parentNode.parentNode.dataset.id
+
+        Controller.GET('/api/incident/get/' + id, {}).done(function (result) {
+
+            $('#id').val(result.id)
+            $('#case_number').val(result.case_number)
+            $('#case_title').val(result.case_title)
+            $('#location').val(result.location)
+            $('#narrative').val(result.narrative)
+            $('#date_reported').val(result.date_reported)
+            $('#date_incident').val(result.date_incident)
+            $("#status_id").selectpicker('val', result.status_id)
+            $("#complainant").selectpicker('val', result.complainant_id)
+            $('#respondent').val(result.respondent)
+
+            $(modal).modal({
+                "backdrop": "static",
+                "keyboard": true,
+                "show": true
+            })
+
+        })
+
+    }
+
+    var Delete = function (e) {
+
+        id = e.parentNode.parentNode.dataset.id
+
+        bootbox.confirm({
+            message: "Delete case? All schedules set for this case will be lost.",
+            buttons: {
+                confirm: {
+                    label: 'Delete',
+                    className: 'btn-sm btn-danger'
+                },
+                cancel: {
+                    label: 'Cancel',
+                    className: 'btn-sm btn-info'
+                }
+            },
+            callback: function (result) {
+                if (result) {
+
+                    Controller.POST('/api/incident/delete', { 'id': id }).done(function (result) {
+                        if (result.success) e.parentNode.parentNode.remove()
+                    })
+
+                }
+            }
+        })
+    }
+
+</script>
+{% endblock %}

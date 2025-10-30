@@ -1,0 +1,657 @@
+{% extends 'shared/layout.html' %}
+{% block title %}
+Customer Information
+{% endblock %}
+
+{% block css %}{% endblock %}
+
+{% block modal %}
+<div class="modal fade" id="modal-default">
+    <div class="modal-dialog">
+        <div class="modal-content card bg-secondary shadow">
+            <div class="modal-header card-header bg-white border-0">
+                <h4 class="card-title">Customer Information</h4>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body card-body">
+                <div class="row">
+                    <input id="id" name="id" type="text" class="form-control form-control-alternative" hidden value="-1">
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label class="form-control-label">Roles <span id="role_id_error"
+                                    class="h5 text-danger"></span></label>
+                            <select id="role_id" name="role_id" data-style="bg-white px-4 py-3 shadow-sm"
+                                class="form-control form-control-alternative selectpicker" data-live-search="true">
+                                <option value="3" selected>Member (Resident)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label class="form-control-label">First Name <span id="first_name_error"
+                                    class="h5 text-danger"></span></label>
+                            <input id="first_name" name="first_name" type="text"
+                                class="form-control form-control-alternative">
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label class="form-control-label">Middle Name</label>
+                            <input id="middle_name" name="middle_name" type="text"
+                                class="form-control form-control-alternative">
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label class="form-control-label">Last Name <span id="last_name_error"
+                                    class="h5 text-danger"></span></label>
+                            <input id="last_name" name="last_name" type="text"
+                                class="form-control form-control-alternative">
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label class="form-control-label">Email <span id="email_error"
+                                    class="h5 text-danger"></span></label>
+                            <input id="email" name="email" type="text" class="form-control form-control-alternative">
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label class="form-control-label">Phone <span id="phone_error"
+                                    class="h5 text-danger"></span></label>
+                            <input id="phone" name="phone" type="text" class="form-control form-control-alternative">
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label class="form-control-label">Password <span style="font-weight: 100">(leave blank to
+                                    remain unchanged)</span> <span id="password_error"
+                                    class="h5 text-danger"></span></label>
+                            <input id="password" name="password" name="password" type="password"
+                                class="form-control form-control-alternative">
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label class="form-control-label">Birthdate</label>
+                            <input id="birth_date" name="birth_date" type="text"
+                                class="form-control form-control-alternative datepicker">
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label class="form-control-label">Gender</label>
+                            <select id="gender" name="gender" data-style="bg-white px-4 py-3 shadow-sm"
+                                class="form-control form-control-alternative selectpicker" data-live-search="true">
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label class="form-control-label">Civil Status</label>
+                            <select id="civil" name="civil" data-style="bg-white px-4 py-3 shadow-sm"
+                                class="form-control form-control-alternative selectpicker" data-live-search="true">
+                                <option value="Single">Single</option>
+                                <option value="Married">Married</option>
+                                <option value="Separated">Separated</option>
+                                <option value="Widowed">Widowed</option>
+                                <option value="Widower">Widower</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label class="form-control-label">Address <span id="address_error"
+                                    class="h5 text-danger"></span></label>
+                            <input id="address" name="address" type="text"
+                                class="form-control form-control-alternative">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-sm btn-danger" data-dismiss="modal">Cancel</button>
+                <button class="btn btn-sm btn-success" onclick="Save()">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="modal-vehicle">
+    <div class="modal-dialog">
+        <div class="modal-content card bg-secondary shadow">
+            <form>
+                <div class="modal-header card-header bg-white border-0">
+                    <h4 class="card-title">Vehicle Info</h4>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body card-body">
+                    <div class="row">
+                        <input id="id" name="id" type="text" class="form-control form-control-alternative" hidden value="-1">
+                        <input id="customer_id" name="customer_id" type="text" class="form-control form-control-alternative" hidden value="{{customer.account.id}}">
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label class="form-control-label">Plate Number</label>
+                                <input id="plate_number" name="plate_number" type="text"
+                                    class="form-control form-control-alternative">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label class="form-control-label">Model</label>
+                                <input id="model" name="model" type="text"
+                                    class="form-control form-control-alternative">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label class="form-control-label">Type</label>
+                                <input id="type" name="type" type="text"
+                                    class="form-control form-control-alternative">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-sm btn-danger" data-dismiss="modal">Cancel</button>
+                    <button class="btn btn-sm btn-success" data-dismiss="modal" onclick="SaveVehicle()">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="main-content" id="panel">
+    <!-- Header -->
+    <div class="header bg-primary pb-6">
+        <div class="container-fluid">
+            <div class="header-body">
+                <div class="row align-items-center py-4">
+                    <div class="col-lg-6 col-7">
+                        <p class="display-2 text-white d-inline-block mb-0">Customer Information</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Page content -->
+    <div class="container-fluid mt--6">
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header border-1">
+                        <h4 class="card-title">Profile | Basic Info</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-2">
+                                <img class="img-fluid p-3 w-100" src={{url_for('static', filename=customer.account.image_profile)}} />
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col">
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label class="form-control-label">First Name</label>
+                                            <input id="first_name" name="first_name" type="text" class="form-control" value="{{customer.account.first_name}}">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label class="form-control-label">Middle Name</label>
+                                            <input id="middle_name" name="middle_name" type="text" class="form-control" value="{{customer.account.middle_name}}">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label class="form-control-label">Last Name</label>
+                                            <input id="last_name" name="last_name" type="text" class="form-control" value="{{customer.account.last_name}}">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label class="form-control-label">Birthdate</label>
+                                            <input id="birth_date" name="birth_date" type="text" class="form-control form-control-alternative datepicker"
+                                                value="{{ customer.account.birth_date.strftime('%m/%d/%Y') if customer.account.birth_date is not none else None }}">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label class="form-control-label">Gender</label>
+                                            <input id="gender" name="gender" type="text" class="form-control" value="{{customer.account.gender}}">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label class="form-control-label">Email</label>
+                                            <input id="email" name="email" type="text" class="form-control" value="{{customer.account.email}}">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label class="form-control-label">Phone</label>
+                                            <input id="phone_1" name="phone_1" type="text" class="form-control" value="{{customer.account.phone_1}}">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label class="form-control-label">Emergency Contact Number</label>
+                                            <input id="phone_2" name="phone_2" type="text" class="form-control" value="{{customer.account.phone_2}}">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-8">
+                                        <div class="form-group">
+                                            <label class="form-control-label">Address</label>
+                                            <input id="address" name="address" type="text" class="form-control" value="{{customer.account.address}}">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header border-0">
+                        <div class="row align-items-center">
+                            <div class="col">
+                                <h4 class="card-title">Vehicles</h4>
+                            </div>
+                            <div class="col text-right">
+                                <button class="btn btn-sm btn-primary" onclick="AddNewVehicle()">Add New</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <!-- Projects table -->
+                        <table class="table align-items-center table-flush">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th scope="col">Plate Number</th>
+                                    <th scope="col">Model</th>
+                                    <th scope="col">Type</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for vehicle in customer.vehicles %}
+                                <tr id='vehicle-{{vehicle.id}}' data-id={{vehicle.id}}>
+                                    <th scope="row">
+                                        {{vehicle.plate_number}}
+                                    </th>
+                                    <td>
+                                        {{vehicle.model}}
+                                    </td>
+                                    <td>
+                                        {{vehicle.type}}
+                                    </td>
+                                    <td class="text-right">
+                                        <button onclick='EditVehicle(this)' class="btn btn-warning btn-sm" >Edit</button>
+                                        <button onclick='DeleteVehicle(this)' class="btn btn-danger btn-sm">Delete</button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header border-0">
+                        <h4 class="card-title">Appointment Records</h4>
+                    </div>
+                    <div class="table-responsive">
+                        <!-- Projects table -->
+                        <table class="table align-items-center table-flush">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th scope="col">Date</th>
+                                    <th scope="col">Time</th>
+                                    <th scope="col">Bay</th>
+                                    <th scope="col">Assigned Staff</th>
+                                    <th scope="col">Service</th>
+                                    <th scope="col">Vehicle</th>
+                                    <th scope="col">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for appointment in customer.appointments | sort(attribute="start_time", reverse=true) %}
+                                    <tr>
+                                        <th scope="row">
+                                            {{ appointment.start_time.strftime("%a %b %d, %Y") }}
+                                        </th>
+                                        <td>
+                                            {{ appointment.start_time.strftime("%I:%M%p") }} - {{ appointment.end_time.strftime("%I:%M%p") }}
+                                        </td>
+                                        <td>
+                                            {{ appointment.bay.bay }}
+                                        </td>
+                                        <td>
+                                            {% for washer in appointment.washers %}
+                                                {{ washer.first_name }} {{ washer.last_name }} <br>
+                                            {% endfor %}
+                                        </td>
+                                        <td>
+                                            {{ appointment.service.name }}
+                                        </td>
+                                        <td>
+                                            {{ appointment.vehicle.plate_number }} {{ appointment.vehicle.model }}
+                                        </td>
+                                        <td>
+                                            {{ appointment.status.status }}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+
+    setSideBar('#menu-customer')
+
+    var modal           = '#modal-default'
+    var modal_vehicle   = '#modal-vehicle'
+
+    // ======================================================================================================================
+
+    var AddNewVehicle = function () {
+
+        $('#id').val('-1')
+        $('#plate_number').val('')
+        $('#model').val('')
+        $('#type').val('')
+        // $('#account_id').val('')
+
+        $(modal_vehicle).modal({
+            "backdrop": "static",
+            "keyboard": true,
+            "show": true
+        })
+
+    }
+
+    var SaveVehicle = function () {
+
+        data = {
+            'id'            : $('#id').val(),
+            'plate_number'  : $('#plate_number').val(),
+            'model'         : $('#model').val(),
+            'type'          : $('#type').val(),
+            'customer_id'   : $('#customer_id').val()
+        }
+        console.log(data)
+
+        Controller.POST('/api/vehicle/upsert', data).done(function (result) {
+            console.log(result)
+            if (result.success) {
+                e = document.getElementById('vehicle-' + customer.account.id)
+                if (e == null) {
+                    location.reload()
+                }
+                else {
+                    e.childNodes[1].innerHTML = customer.account.plate_number
+                    e.childNodes[3].innerHTML = customer.account.model
+                    e.childNodes[5].innerHTML = customer.account.type
+                }
+            }
+        })
+
+    }
+
+    var EditVehicle = function (e) {
+
+        id = e.parentNode.parentNode.dataset.id
+
+        Controller.GET('/api/vehicle/get/' + id, {}).done(function (result) {
+
+            $('#id').val(result.id)
+            // $('#account_id').val(result.account_id)
+            $('#plate_number').val(result.plate_number)
+            $('#model').val(result.model)
+            $('#type').val(result.type)
+
+            $(modal_vehicle).modal({
+                "backdrop": "static",
+                "keyboard": true,
+                "show": true
+            })
+
+        })
+
+    }
+
+    var DeleteVehicle = function (e) {
+
+        id = e.parentNode.parentNode.dataset.id
+
+        bootbox.confirm({
+            message: "Delete item?",
+            buttons: {
+                confirm: {
+                    label: 'Delete',
+                    className: 'btn-sm btn-danger'
+                },
+                cancel: {
+                    label: 'Cancel',
+                    className: 'btn-sm btn-info'
+                }
+            },
+            callback: function (result) {
+                if (result) {
+
+                    Controller.POST('/api/vehicle/delete', { 'id': id }).done(function (result) {
+                        if (result.success) e.parentNode.parentNode.remove()
+                    })
+
+                }
+            }
+        })
+    }
+
+    // ======================================================================================================================
+
+    var AddNew = function () {
+
+        $('#first_name_error').html('')
+        $('#last_name_error').html('')
+        $('#phone_error').html('')
+        $('#email_error').html('')
+        $('#password_error').html('')
+        $('#address_error').html('')
+
+        $('#id').val('-1')
+        $('#first_name').val('')
+        $('#middle_name').val('')
+        $('#last_name').val('')
+        $('#email').val('')
+        $('#phone').val('')
+        $('#password').val('')
+        $('#birth_date').val('')
+        $('#address').val('')
+
+        $(".selectpicker").selectpicker('deselectAll');
+        $(".selectpicker").selectpicker('val', []);
+
+        $(modal).modal({
+            "backdrop": "static",
+            "keyboard": true,
+            "show": true
+        })
+
+    }
+
+    var Save = function () {
+
+        data = {
+            'id': $('#id').val(),
+            'role_id': $('#role_id').val(),
+            'first_name': $('#first_name').val(),
+            'middle_name': $('#middle_name').val(),
+            'last_name': $('#last_name').val(),
+            'email': $('#email').val(),
+            'phone': $('#phone').val(),
+            'gender': $('#gender').val(),
+            'civil': $('#civil').val(),
+            'password': $('#password').val(),
+            'birth_date': $('#birth_date').val(),
+            'address': $('#address').val(),
+            'position': null
+        }
+
+        $('#role_id_error').html('')
+        $('#first_name_error').html('')
+        $('#last_name_error').html('')
+        $('#phone_error').html('')
+        $('#email_error').html('')
+        $('#password_error').html('')
+        $('#address_error').html('')
+
+        Controller.POST('/api/account/upsert', data).done(function (result) {
+            console.log(result)
+            if (result.success == true) {
+                e = document.getElementById('account-' + customer.account.id)
+                if (e == null) {
+                    location.reload()
+                }
+                else {
+                    e.childNodes[1].innerHTML = customer.account.first_name + ' ' + customer.account.middle_name + ' ' + customer.account.last_name
+                    e.childNodes[3].innerHTML = customer.account.address
+                    e.childNodes[5].innerHTML = customer.account.email
+                    e.childNodes[7].innerHTML = customer.account.phone
+                    e.childNodes[9].innerHTML = 'Registered'
+                    $(modal).modal('hide')
+                }
+            }
+            else {
+
+                if (result.errors.role_id) $('#role_id_error').html(result.errors.role_id)
+                if (result.errors.first_name) $('#first_name_error').html(result.errors.first_name)
+                if (result.errors.last_name) $('#last_name_error').html(result.errors.last_name)
+                if (result.errors.phone) $('#phone_error').html(result.errors.phone)
+                if (result.errors.email) $('#email_error').html(result.errors.email)
+                if (result.errors.password) $('#password_error').html(result.errors.password)
+                if (result.errors.address) $('#address_error').html(result.errors.address)
+
+            }
+        })
+
+    }
+
+    var Edit = function (e) {
+
+        $('#role_id_error').html('')
+        $('#first_name_error').html('')
+        $('#last_name_error').html('')
+        $('#phone_error').html('')
+        $('#email_error').html('')
+        $('#password_error').html('')
+        $('#address_error').html('')
+
+        id = e.parentNode.parentNode.dataset.id
+
+        Controller.GET('/api/account/get/' + id, {}).done(function (result) {
+
+            $('#id').val(result.id)
+            $('#role_id').val(result.role_id)
+            $('#first_name').val(result.first_name)
+            $('#middle_name').val(result.middle_name)
+            $('#last_name').val(result.last_name)
+            $('#email').val(result.email)
+            $('#phone').val(result.phone)
+            $('#gender').val(result.gender)
+            $('#civil').val(result.civil)
+            $('#birth_date').val(result.birth_date)
+            $('#address').val(result.address)
+
+            $(modal).modal({
+                "backdrop": "static",
+                "keyboard": true,
+                "show": true
+            })
+
+        })
+
+    }
+
+    var Delete = function (e) {
+
+        id = e.parentNode.parentNode.dataset.id
+
+        bootbox.confirm({
+            message: "All data related to this account will be lost. Continue?",
+            buttons: {
+                confirm: {
+                    label: 'Delete',
+                    className: 'btn-sm btn-danger'
+                },
+                cancel: {
+                    label: 'Cancel',
+                    className: 'btn-sm btn-info'
+                }
+            },
+            callback: function (result) {
+                if (result) {
+
+                    Controller.POST('/api/account/delete', { 'id': id }).done(function (result) {
+                        if (result.success) location.reload() //e.parentNode.parentNode.remove()
+                    })
+
+                }
+            }
+        })
+    }
+
+</script>
+{% endblock %}

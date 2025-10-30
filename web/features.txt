@@ -1,0 +1,113 @@
+============================================================================
+
+Rules:
+
+when creating new appointments:
+- 1 customer can create multiple appointments for multiple vehicles
+- appointment start time and end time must not overlap to booked appointments
+- appointment date is dependent on the available bays
+- appointment date is dependent on the eta of the service to be provided
+- 2 staffs are assigned to cars. 1 staff is assigned to motocycles.
+- staff is assigned when can_front_desk = False
+- staff is assigned when is_on_shift = True
+- staff is assigned when appointment date is within staff schedule or shift
+- staff is not assigned when service duration from start to finish is not within staff schedule or shift
+- newly created appointment status is set first to pending 
+- appointment status is set to in queue if payment sum is equal to service price
+- appointments are prioritized: highest priority - senior, high priority - pwd, medium priority - highest loyalty points, low priority - registered customers, lowest priority - guests
+-
+
+============================================================================
+
+
+STAFF FEATURES (WASHER):
+- update shift schedule
+- set is_on_shift
+- set status to assigned appointment
+- view dashboard of assigned appointments
+- view list of notifications
+- udpate own account info
+
+STAFF FEATURES (FRONT DESK):
+- update shift schedule
+- set is_on_shift
+- assign washers to appointments
+- assign bay areas to appointments
+- request payment view notification
+- set status to appointments
+- update own account info
+- view
+    - available bay on a given appointment schedule
+    - available staff on a given appointment schedule
+
+CUSTOMER FEATURES:
+- create appointment
+- register account or as guest
+- update own account info
+- add vehicles owned
+- view dashboard of created appointments
+- view list of feedbacks per created appointments
+- send payment
+- view list of notifications on:
+    - appointment status
+    - payment status
+    - loyalty points
+
+ADMIN FEATURES
+- all crud tasks
+
+===========================================================================
+
+IMPORTANT NOTES
+
+FOR DEVELOPMENT:
+- For future bookings (not on the same day), do not filter if washer is_on_shift=True
+
+- If Registered Customer did not declare vehicle during booking, create a dummy vehicle 
+  then add feature to edit vehicle info or replace it with an existing vehicle under that customer.
+
+- If Appointment completed before ETA, update the appointment's end_time and then adjust the start_time of walk-in customers
+- If Appointment cancelled, 
+    - adjust the start_time of the next appointment (priority based) if customers are already in the shop
+    - adjust the start_time of the next appointment (priority based) if customers are not yet in the shop, notify them
+    - if no next appointments were adjusted, open the slot for new bookings.
+
+FOR CUSTOMERS:
+Customer Dashboard must show on going appointments with a progress bar or a countdown timer or any animations
+Customer can click "Quick Book" and then book the usual service on the same day.
+
+FOR STAFF:
+Front Desk can click "Quick Book" for walk-in customers and queue the appointment to the next available time, bay and staff
+Front Desk can monitor and set who are currently on shift
+Front Desk can set shift schedules for Washers
+Front Desk should be able to see if Washers need overtime for next appointment
+
+FOR AUTOMATION:
+
+Pending requests should be auto cancelled when:
+    - not confirmed until scheduled appointment (but system now autobook appointments)
+
+Appointments should be cancelled when:
+    - customer is not around on scheduled appointment
+    - when customer requests to cancel
+    - when another customer has paid first for the slot
+
+There must be a cron job that will monitor and cancel expired appointments.
+
+Must not accept booking if shop is currently closed or closed on schedule.
+
+============================================================================
+
+DIFFICULT SCENARIOS
+
+- When there are 2 washers having the same shift, and washer #1 is currently booked to wash a bike, then there's a new appointment to wash an SUV.
+  2 washers are required to wash an SUV, so customer will wait for washer #1 to finish current job with the bike before starting to wash the SUV.
+  Risk: Washer #2 is stand by. Long waiting time.
+
+- When there are 2 washers having the same shift, and washer #1 is currently booked to wash a bike, then there's a new appointment to wash an SUV.
+  2 washers are required to wash an SUV. However, washer #1 will end shift after current job. 
+  So, customer will wait until another washer (#3) clocks in before starting to wash the SUV.
+  Risk: Washer #2 is stand by. Long waiting time.
+
+- How to verify vehicle type? Customers might book for Sedan but bring an SUV. 
+  Risk: If overlooked, price will be cheaper.

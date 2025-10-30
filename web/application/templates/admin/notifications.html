@@ -1,0 +1,74 @@
+{% extends 'shared/layout.html' %}
+{% block title %}
+    Notifications
+{% endblock %}
+
+{% block css %}{% endblock %}
+
+{% block content %}
+<div class="main-content" id="panel">
+    <!-- Header -->
+    <div class="header bg-primary pb-6">
+        <div class="container-fluid">
+            <div class="header-body">
+                <div class="row align-items-center py-4">
+                    <div class="col-lg-6 col-7">
+                        <p class="display-2 text-white d-inline-block mb-0">Notifications</p>
+                    </div>
+                </div>
+            </div>  
+        </div>
+    </div>
+
+    <!-- Page content -->
+    <div class="container-fluid mt--6">
+        <div class="row">
+            <div class="col">
+                <div class="card">
+                    <div class="card-header border-0">
+                        <h4 class="card-title"></h4>
+                    </div>
+                    <div class="table-responsive">
+                        <!-- Projects table -->
+                        <table class="table align-items-center table-flush">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th scope="col">Notification</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for notification in notifications | sort(attribute="start_time", reverse=true) %}
+                                    {% if not notification.viewed %} <tr class="text-default"> {% else %} <tr class="text-muted"> {% endif %}
+                                            <th scope="row">
+                                                <div class="media align-items-center">
+                                                    <a href="#" class="avatar rounded-circle mr-3">
+                                                        <img alt="{{notification.account.last_name}}.png" src={{url_for('static', filename=notification.account.image_profile)}} />
+                                                    </a>
+                                                    <div class="media-body">
+                                                        <p class="my-0 lead">{{ notification.account.first_name }} {{ notification.account.last_name }}</p>
+                                                        <p class="my-0">{{ notification.content }}</p>
+                                                        <p class="small">{{ notification.created_at | humanize_ts }}</p class="font-weight-small">
+                                                    </div>
+                                                </div>
+                                            </th>
+                                        </tr>
+                                    
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    
+    setSideBar('#menu-notifications');
+
+</script>
+
+{% endblock %}

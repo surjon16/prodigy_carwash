@@ -1,0 +1,352 @@
+{% extends 'shared/layout.html' %}
+{% block title %}
+Accounts
+{% endblock %}
+
+{% block css %}{% endblock %}
+
+{% block modal %}
+<div class="modal fade" id="modal-default">
+    <div class="modal-dialog">
+        <div class="modal-content card bg-secondary shadow">
+                <div class="modal-header card-header bg-white border-0">
+                    <h4 class="card-title">Account Information</h4>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body card-body">
+                    <div class="row">
+                        <input id="id" name="id" type="text" class="form-control form-control-alternative" hidden value="-1">
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label class="form-control-label">Roles <span id="role_id_error" class="h5 text-danger"></span></label>
+                                <select id="role_id" name="role_id" data-style="bg-white px-4 py-3 shadow-sm" class="form-control form-control-alternative selectpicker" data-live-search="true">
+                                    <option value="1">Administrator</option>
+                                    <option value="2">Staff</option>
+                                    <option value="3">Customer</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label class="form-control-label">First Name <span id="first_name_error" class="h5 text-danger"></span></label>
+                                <input id="first_name" name="first_name" type="text" class="form-control form-control-alternative">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label class="form-control-label">Middle Name</label>
+                                <input id="middle_name" name="middle_name" type="text" class="form-control form-control-alternative">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label class="form-control-label">Last Name <span id="last_name_error" class="h5 text-danger"></span></label>
+                                <input id="last_name" name="last_name" type="text" class="form-control form-control-alternative">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label class="form-control-label">Email <span id="email_error" class="h5 text-danger"></span></label>
+                                <input id="email" name="email" type="text" class="form-control form-control-alternative">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label class="form-control-label">Phone <span id="phone_1_error" class="h5 text-danger"></span></label>
+                                <input id="phone_1" name="phone_1" type="text" class="form-control form-control-alternative">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label class="form-control-label">Emergency Contact Number <span id="phone_2_error" class="h5 text-danger"></span></label>
+                                <input id="phone_2" name="phone_2" type="text" class="form-control form-control-alternative">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label class="form-control-label">Password <span style="font-weight: 100">(leave blank to remain unchanged)</span> <span id="password_error" class="h5 text-danger"></span></label>
+                                <input id="password" name="password" name="password" type="password" class="form-control form-control-alternative">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label class="form-control-label">Birthdate</label>
+                                <input id="birth_date" name="birth_date" type="text" class="form-control form-control-alternative datepicker">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label class="form-control-label">Gender</label>
+                                <select id="gender" name="gender" data-style="bg-white px-4 py-3 shadow-sm" class="form-control form-control-alternative selectpicker" data-live-search="true">
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label class="form-control-label">Address <span id="address_error" class="h5 text-danger"></span></label>
+                                <input id="address" name="address" type="text" class="form-control form-control-alternative">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-sm btn-danger" data-dismiss="modal">Cancel</button>
+                    <button class="btn btn-sm btn-success" onclick="Save()">Save</button>
+                </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="main-content" id="panel">
+    <!-- Header -->
+    <div class="header bg-primary pb-6">
+        <div class="container-fluid">
+            <div class="header-body">
+                <div class="row align-items-center py-4">
+                    <div class="col-lg-6 col-7">
+                        <p class="display-2 text-white d-inline-block mb-0">Accounts</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Page content -->
+    <div class="container-fluid mt--6">
+        <div class="row">
+            <div class="col">
+                <div class="card">
+                    <div class="card-header border-0">
+                        <div class="row align-items-center">
+                            <div class="col text-left">
+                                <button class="btn btn-sm btn-primary" onclick="AddNew()">Add New</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <!-- Projects table -->
+                        <table class="table align-items-center table-flush">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th scope="col">Full Name</th>
+                                    <th scope="col">Email</th>
+                                    <th scope="col">Designation</th>
+                                    <th scope="col" class="text-right">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for account in accounts %}
+                                    {% if account.role_id is not none %}
+                                        {% if account.role_id < 3 %}
+                                            <tr id='account-{{account.id}}' data-id={{account.id}}>
+                                                <th scope="row">
+                                                    {{account.first_name + ' ' + account.last_name}}
+                                                </th>
+                                                <td>
+                                                    {{account.email}}
+                                                </td>
+                                                <td>
+                                                    {{account.role.role}}
+                                                </td>
+                                                <td class="text-right">
+                                                    <a href="/admin/account/{{account.id}}" class="btn btn-info btn-sm"><i class="fa fa-eye"></i></a>
+                                                    <button onclick='Edit(this)' class="btn btn-warning btn-sm"><i class="fa fa-edit"></i></button>
+                                                    <button onclick='Delete(this)' class="btn btn-danger btn-sm"><i class="fa fa-trash"></i></button>
+                                                </td>
+                                            </tr>
+                                        {% endif %}
+                                    {% endif %}
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+
+    setSideBar('#menu-accounts')
+
+    var modal = '#modal-default'
+
+    var AddNew = function() {
+        
+        $('#first_name_error').html('')
+        $('#last_name_error').html('')
+        $('#phone_1_error').html('')
+        $('#phone_2_error').html('')
+        $('#email_error').html('')
+        $('#password_error').html('')
+        $('#address_error').html('')
+
+        $('#id').val('-1')
+        $('#first_name').val('')
+        $('#middle_name').val('')
+        $('#last_name').val('')
+        $('#email').val('')
+        $('#phone_1').val('')
+        $('#phone_2').val('')
+        
+        $(".selectpicker").selectpicker('deselectAll');
+        $(".selectpicker").selectpicker('val', []);
+
+        $('#password').val('')
+        $('#birth_date').val('')
+        $('#address').val('')
+
+        $(modal).modal({ 
+            "backdrop"  : "static",
+            "keyboard"  : true,
+            "show"      : true
+        })
+
+    }
+
+    var Save = function() {
+        
+        $('#first_name_error').html('')
+        $('#last_name_error').html('')
+        $('#phone_1_error').html('')
+        $('#phone_2_error').html('')
+        $('#email_error').html('')
+        $('#password_error').html('')
+        $('#address_error').html('')
+
+        data = {
+            'id'            : $('#id').val(),
+            'role_id'       : $('#role_id').val(),
+            'first_name'    : $('#first_name').val(),
+            'middle_name'   : $('#middle_name').val(),
+            'last_name'     : $('#last_name').val(),
+            'email'         : $('#email').val(),
+            'phone_1'       : $('#phone_1').val(),
+            'phone_2'       : $('#phone_2').val(),
+            'gender'        : $('#gender').val(),
+            'password'      : $('#password').val(),
+            'birth_date'    : $('#birth_date').val(),
+            'address'       : $('#address').val(),
+        }
+
+        Controller.POST('/api/account/upsert', data).done(function(result) {
+            
+            console.log(data, result)
+
+            if (result.success == true) {
+                location.reload()
+
+            }
+            else {
+
+                if(result.errors.role_id) $('#role_id_error').html(result.errors.role_id)
+                if(result.errors.first_name) $('#first_name_error').html(result.errors.first_name)
+                if(result.errors.last_name) $('#last_name_error').html(result.errors.last_name)
+                if(result.errors.phone_1) $('#phone_1_error').html(result.errors.phone_1)
+                if(result.errors.phone_2) $('#phone_2_error').html(result.errors.phone_2)
+                if(result.errors.email) $('#email_error').html(result.errors.email)
+                if(result.errors.password) $('#password_error').html(result.errors.password)
+                if(result.errors.address) $('#address_error').html(result.errors.address)
+
+            }
+        })
+
+    }
+
+    var Edit = function(e) {
+
+        $('#first_name_error').html('')
+        $('#last_name_error').html('')
+        $('#phone_1_error').html('')
+        $('#phone_2_error').html('')
+        $('#email_error').html('')
+        $('#password_error').html('')
+        $('#address_error').html('')
+
+        id = e.parentNode.parentNode.dataset.id
+        
+        Controller.GET('/api/account/get/' + id, {}).done(function(result) {
+
+            console.log(result)
+
+            $('#id').val(result.data.id)
+            $("#role_id").selectpicker('val', result.data.role_id)
+            $('#first_name').val(result.data.first_name)
+            $('#middle_name').val(result.data.middle_name)
+            $('#last_name').val(result.data.last_name)
+            $('#email').val(result.data.email)
+            $('#phone_1').val(result.data.phone_1)
+            $('#phone_2').val(result.data.phone_2)
+            $("#gender").selectpicker('val', result.data.gender)
+            $('#birth_date').val(result.data.birth_date)
+            $('#address').val(result.data.address)
+
+            $(modal).modal({
+                "backdrop"  : "static",
+                "keyboard"  : true,
+                "show"      : true
+            })
+
+        })
+
+    }
+
+    var Delete = function(e) {
+        
+        id = e.parentNode.parentNode.dataset.id
+        
+        bootbox.confirm({
+            message: "All data related to this account will be lost. Continue?",
+            buttons: {
+                confirm: {
+                    label: 'Delete',
+                    className: 'btn-sm btn-danger'
+                },
+                cancel: {
+                    label: 'Cancel',
+                    className: 'btn-sm btn-info'
+                }
+            },
+            callback: function (result) {
+                if (result) {
+                    
+                    Controller.POST('/api/account/delete', {'id': id}).done(function(result) {
+                        if(result.success) e.parentNode.parentNode.remove()
+                    })
+
+                }
+            }
+        })
+    }
+
+</script>
+{% endblock %}

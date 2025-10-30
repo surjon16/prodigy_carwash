@@ -1,0 +1,89 @@
+{% extends 'member/shared/layout.html' %}
+{% block title %}
+Dashboard
+{% endblock %}
+
+{% block css %}{% endblock %}
+
+{% block content %}
+<div class="main-content" id="panel">
+
+    <!-- Header -->
+    <div class="header bg-primary pb-6">
+        <div class="container-fluid">
+            <div class="header-body">
+                <div class="row align-items-center py-4">
+                    <div class="col-lg-6 col-7">
+                        <p class="display-2 text-white d-inline-block mb-0">Notifications</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Page content -->
+    <div class="container-fluid mt--6">
+        <div class="row">
+            <div class="col">
+                <div class="card">
+                    <div class="card-header border-1">
+                        <div class="row align-items-center">
+                            <div class="col">
+                                <h3 class="mb-0 d-inline-block"></h3>
+                                <button class="btn btn-sm btn-primary float-right" onclick="Refresh()">Refresh</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <!-- Projects table -->
+                        <table class="table align-items-center table-flush">
+                            <tbody id="notif-list" class="bg-secondary">
+                                <tr>
+                                    <td scope="row">
+                                        <a href="#" class="text-dark lead card p-3">
+                                            <span class="d-block">No Data.</span>
+                                        </a>
+                                    </td>                                                
+                                </tr>
+                                <!-- {% for notification in data.notifications %}
+                                    {% if current_user.id == notification.account.id %}
+                                        {% if notification.viewed == true %}
+                                            <tr>
+                                                <td scope="row">
+                                                    <a href="/member/notification/{{notification.id}}" class="text-dark lead card p-3">
+                                                        <span class="d-block">{{notification.created_at.strftime('%h %d %Y %I:%M %p')}}</span>
+                                                        <span class="d-block">{{notification.content[:40]}}...</span>
+                                                    </a>
+                                                </td>                                                
+                                            </tr>
+                                        {% else %}
+                                            <tr>
+                                                <td scope="row">
+                                                    <a href="/member/notification/{{notification.id}}" class="text-dark card p-3">
+                                                        <span class="d-block">{{notification.created_at.strftime('%h %d %Y %I:%M %p')}}</span>
+                                                        <span class="d-block">{{notification.content[:40]}}...</span>
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        {% endif %}
+                                    {% endif %}
+                                {% endfor %} -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+
+    function Refresh() {
+        window.location.href = '/member/notifications'
+    }
+
+</script>
+{% endblock %}

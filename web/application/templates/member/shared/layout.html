@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content='{{ csrf_token() }}'>
+
+    <title>{% block title %}{% endblock %} | Lupong Tagapamayapa</title>
+    
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700">
+    <link rel="stylesheet" href='/static/argon/vendor/nucleo/css/nucleo.css' type="text/css">
+    <link rel="stylesheet" href='/static/argon/vendor/@fortawesome/fontawesome-free/css/all.min.css' type="text/css">
+    <link rel="stylesheet" href='/static/argon/css/argon.min.css' type="text/css">
+
+    <!-- <link href="/static/argon/assets/js/plugins/nucleo/css/nucleo.css" rel="stylesheet" /> -->
+    <!-- <link href="/static/argon/assets/js/plugins/@fortawesome/fontawesome-free/css/all.min.css" rel="stylesheet" /> -->
+    <!-- <link href="/static/argon/assets/css/argon-dashboard.css?v=1.1.0" rel="stylesheet" /> -->
+
+    <style>
+        * {
+            font-size: 3.5vw;
+        }
+    </style>
+    {% block css %}{% endblock %}
+
+</head>
+<body>
+
+    {% block modal %}{% endblock %}
+    <div class="main-content">
+        {% include 'member/shared/navigation.html' %}
+        {% block content %}{% endblock %}
+    </div>
+
+    <!-- Argon Scripts -->
+    <!-- Core -->
+    <script src='/static/argon/vendor/jquery/dist/jquery.min.js'></script>
+    <script src='/static/argon/vendor/bootstrap/dist/js/bootstrap.bundle.min.js'></script>
+    <script src='/static/argon/vendor/js-cookie/js.cookie.js'></script>
+    <script src='/static/argon/vendor/jquery.scrollbar/jquery.scrollbar.min.js'></script>
+    <script src='/static/argon/vendor/jquery-scroll-lock/dist/jquery-scrollLock.min.js'></script>
+    <script src='/static/argon/vendor/bootstrap-datepicker/dist/js/bootstrap-datepicker.min.js'></script>
+
+    <!-- Argon JS -->
+    <script src='/static/argon/js/argon.min.js'></script>
+
+    <!--   Core   -->
+    <!-- <script src="/static/argon/assets/js/plugins/jquery/dist/jquery.min.js"></script> -->
+    <!-- <script src="/static/argon/assets/js/plugins/bootstrap/dist/js/bootstrap.bundle.min.js"></script> -->
+    <!--   Optional JS   -->
+    <!-- <script src="/static/argon/assets/js/plugins/chart.js/dist/Chart.min.js"></script> -->
+    <!-- <script src="/static/argon/assets/js/plugins/chart.js/dist/Chart.extension.js"></script> -->
+    <!--   Argon JS   -->
+    <!-- <script src="/static/argon/assets/js/argon-dashboard.min.js?v=1.1.0"></script> -->
+
+    <!-- Bootbox -->
+    <script src="/static/js/bootbox.min.js"></script>
+
+    <!-- Backend JS -->
+    <script src="/static/js/core.js"></script>
+    
+    <script>
+        
+        var setSideBar = function (element) {
+            $('[id^="menu-"]').removeClass('active');
+            $(element).addClass('active');
+        }
+        var setSideBarTitle = function (element, _title) {
+            $(element + "-title").text(_title);
+        }
+
+        var total_notifs = 0
+
+        async function getNotifications() {
+            let mPromise = new Promise(function(resolve, reject) {
+                new_notifs = []
+                Controller.GET('/api/notifications/account/get/{{current_user.id}}').done(function (result) {
+                    resolve(result)
+                })
+            })
+            new_notifs = await mPromise
+            document.getElementById('total-notifs').innerHTML = new_notifs.filter(function(notif) { return notif.viewed == false }).length
+            
+            notif_list = document.getElementById('notif-list')
+            if (notif_list != null) {
+                if(total_notifs < new_notifs.length) {
+                    total_notifs = new_notifs.length
+                    notif_list.innerHTML = ''
+                    new_notifs.forEach(notif => {
+
+                        tr = document.createElement('tr')
+                        td = document.createElement('td')
+                        a = document.createElement('a')
+                        span_1 = document.createElement('span')
+                        span_2 = document.createElement('span')
+
+                        td.setAttribute('scope', 'row')
+                        a.setAttribute('href', '/member/notification/' + notif.id)
+                        if(notif.viewed) a.setAttribute('class', 'text-dark lead card p-3')
+                        else a.setAttribute('class', 'text-dark card h1 p-3')
+                        span_1.setAttribute('class', 'd-block')
+                        span_2.setAttribute('class', 'd-block')
+                        
+                        span_1.append(new Date(notif.created_at).toLocaleDateString("en-US"))
+                        span_2.append(notif.content.substring(0, 25) + '...')
+
+                        a.append(span_1)
+                        a.append(span_2)
+                        td.append(a)
+                        tr.append(td)
+
+                        notif_list.prepend(tr)
+                    })
+                }
+            }
+
+            setTimeout(getNotifications, 5000) // loop this request every 5s
+
+        }
+        getNotifications()
+
+    </script>
+    {% block scripts %}{% endblock %}
+    
+</body>
+</html>

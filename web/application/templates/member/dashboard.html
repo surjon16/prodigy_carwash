@@ -1,0 +1,164 @@
+{% extends 'member/shared/layout.html' %}
+{% block title %}
+    Dashboard
+{% endblock %}
+
+{% block css %}{% endblock %}
+
+{% block content %}
+<div class="main-content" id="panel">
+
+    <!-- Header -->
+    <div class="header bg-primary pb-6">
+        <div class="container-fluid">
+            <div class="header-body">
+                <div class="row align-items-center py-4">
+                    <div class="col-lg-6 col-7">
+                        <p class="display-2 text-white d-inline-block mb-0">Dashboard</p>
+                    </div>
+                </div>
+            </div>  
+        </div>
+    </div>
+
+    <!-- Page content -->
+    <div class="container-fluid mt--6">
+        {% if current_user.role_id is none %}
+            <div class="row mb-5">
+                <div class="col">
+                    <div class="card">
+                        <div class="card-header border-0"></div>
+                        <div class="card-body border-0">
+                            <div class="row align-items-center">
+                                <div class="col">
+                                    <h3 class="mb-0 d-inline-block">Your registration is still pending.</h3>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-footer border-0"></div>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <div class="row">
+                <div class="col">
+                    <div class="card">
+                        <div class="card-header border-0">
+                            <div class="row align-items-center">
+                                <div class="col">
+                                    <h3 class="mb-0 d-inline-block">Filed Cases</h3>
+                                    <button class="btn btn-sm btn-primary float-right" onclick="Refresh()">Refresh</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="table-responsive">
+                            <!-- Projects table -->
+                            <table class="table align-items-center table-flush">
+                                <thead class="thead-light">
+                                    <tr>
+                                        <th scope="col">Status</th>
+                                        <th scope="col">Title</th>
+                                        <th scope="col">Date Filed</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for incident in data.incidents %}
+                                        {% if current_user.role_id == 2 %}
+                                            <tr>
+                                                <th scope="row">
+                                                    {{incident.status.status}}
+                                                </th>
+                                                <td>
+                                                    {{incident.case_title}}
+                                                </td>
+                                                <td>
+                                                    {{incident.date_reported.strftime('%h %d %Y')}}
+                                                </td>
+                                            </tr>
+                                        {% else %}
+                                            {% if current_user.id == incident.complainant.id %}
+                                            <tr>
+                                                <th scope="row">
+                                                    {{incident.status.status}}
+                                                </th>
+                                                <td>
+                                                    {{incident.case_title}}
+                                                </td>
+                                                <td>
+                                                    {{incident.date_reported.strftime('%h %d %Y')}}
+                                                </td>
+                                            </tr>
+                                            {% endif %}
+                                        {% endif %}
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col">
+                    <div class="card">
+                        <div class="card-header border-0">
+                            <div class="row align-items-center">
+                                <div class="col">
+                                    <h3 class="mb-0 d-inline-block">Schedules</h3>
+                                    <button class="btn btn-sm btn-primary float-right" onclick="Refresh()">Refresh</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="table-responsive">
+                            <!-- Projects table -->
+                            <table class="table align-items-center table-flush">
+                                <thead class="thead-light">
+                                    <tr>
+                                        <th scope="col">Case Title</th>
+                                        <th scope="col">Date of Hearing</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for schedule in data.schedules %}
+                                        {% if current_user.role_id == 2 %}
+                                                <tr>
+                                                    <th scope="row">
+                                                        {{schedule.incident.case_title}} ({{schedule.incident.status.status}})
+                                                    </th>
+                                                    <td>
+                                                        {{schedule.schedule.strftime('%h %d %Y')}}
+                                                    </td>
+                                                </tr>
+                                        {% else %}
+                                            {% if current_user.id == schedule.incident.complainant.id %}
+                                                <tr>
+                                                    <th scope="row">
+                                                        {{schedule.incident.case_title}} ({{schedule.incident.status.status}})
+                                                    </th>
+                                                    <td>
+                                                        {{schedule.schedule.strftime('%h %d %Y')}}
+                                                    </td>
+                                                </tr>
+                                            {% endif %}
+                                        {% endif %}
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    
+    setSideBar('#menu-dashboard')
+    function Refresh() {
+        window.location.href = '/member/dashboard'
+    }
+
+</script>
+{% endblock %}

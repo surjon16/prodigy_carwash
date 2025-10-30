@@ -1,0 +1,305 @@
+{% extends 'shared/layout.html' %}
+{% block title %}
+Case Records
+{% endblock %}
+
+{% block css %}{% endblock %}
+
+{% block content %}
+<div class="main-content" id="panel">
+    <!-- Header -->
+    <div class="header bg-primary pb-6">
+        <div class="container-fluid">
+            <div class="header-body">
+                <div class="row align-items-center py-4">
+                    <div class="col-lg-6 col-7">
+                        <p class="display-2 text-white d-inline-block mb-0">Case Record</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Page content -->
+    <div class="container-fluid mt--6">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header border-1">
+                        <div class="row align-items-center">
+                            <div class="col text-left">
+                                <!-- <button class="btn btn-sm btn-primary" onclick="AddNew()">Add New</button> -->
+                                <h4 class="card-title">Case Details</h4>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-control-label">Case Title</label>
+                                    <input type="text" class="form-control" value="{{data.incident.case_title}}">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-control-label">Case Number</label>
+                                    <input type="text" class="form-control" value="{{data.incident.case_number}}">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <label class="form-control-label">Facts of the Complaint</label>
+                                    <textarea id="narrative" name="narrative" type="text" class="form-control" rows="20">{{data.incident.narrative}}</textarea>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <label class="form-control-label">Case Location</label>
+                                    <input type="text" class="form-control" value="{{data.incident.location}}">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="date_incident" class="form-control-label">Incident Date</label>
+                                    <input class="form-control" type="text" value="{{data.incident.date_incident}}">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="date_reported" class="form-control-label">Date Reported</label>
+                                    <input class="form-control" type="text" value="{{data.incident.date_reported}}">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-control-label">Complainant</label>
+                                    <input class="form-control" type="text" value="{{data.incident.complainant.first_name}} {{data.incident.complainant.last_name}}">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-control-label">Respondent</label>
+                                    <input type="text" class="form-control" value="{{data.incident.respondent}}">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label class="form-control-label">Status</label>
+                                    <input class="form-control" type="text" value="{{data.incident.status.status}}">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header border-0">
+                        <h4 class="card-title">Scheduled Mediation</h4>
+                    </div>
+                    <div class="table-responsive">
+                        <!-- Projects table -->
+                        <table class="table align-items-center table-flush">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th scope="col">Schedule</th>
+                                    <th scope="col">Assigned Lupon</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for schedule in data.incident.incidents_schedules %}
+                                <tr id='schedule-{{schedule.id}}' data-id={{schedule.id}}>
+                                    <td>
+                                        {% if schedule.schedule is not none %}
+                                            {{schedule.schedule.strftime('%h %d %Y %I:%M %p')}}
+                                        {% else %}
+                                            None
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% for lupon in data.lupon %}
+                                            {% if lupon.id | string in schedule.lupon %}
+                                                {{lupon.first_name}} {{lupon.last_name}} <br>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </td>
+                                    <td class="text-right">
+                                        <a href="/admin/schedule/{{schedule.id}}" class="btn btn-sm btn-info"><i class="fa fa-eye"></i></a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+
+    setSideBar('#menu-incidents')
+
+    var modal = '#modal-default'
+
+    var AddNew = function () {
+
+        // $('#case_number_error').html('')
+        $('#case_title_error').html('')
+        $('#location_error').html('')
+        $('#narrative_error').html('')
+        $('#date_reported_error').html('')
+        $('#date_incident_error').html('')
+        $('#status_id_error').html('')
+        $('#complainant_error').html('')
+        $('#respondent_error').html('')
+
+        $('#id').val('-1')
+        $('#case_number').val('{{((data.incident.incidents|length + 1)|string).zfill(4)}} -- {{now.year}}')
+        $('#case_title').val('')
+        $('#location').val('')
+        $('#narrative').val('')
+        $('#date_reported').val('')
+        $('#date_incident').val('')
+        $('#status_id').val('')
+        $('#complainant').val('')
+        $('#respondent').val('')
+
+        $(modal).modal({
+            "backdrop": "static",
+            "keyboard": true,
+            "show": true
+        })
+
+    }
+
+    var Save = function () {
+
+        $('#case_number_error').html('')
+        $('#case_title_error').html('')
+        $('#location_error').html('')
+        $('#narrative_error').html('')
+        $('#date_reported_error').html('')
+        $('#date_incident_error').html('')
+        $('#status_id_error').html('')
+        $('#complainant_error').html('')
+        $('#respondent_error').html('')
+
+        data = {
+            'id': $('#id').val(),
+            'case_number': $('#case_number').val(),
+            'case_title': $('#case_title').val(),
+            'location': $('#location').val(),
+            'narrative': $('#narrative').val(),
+            'date_reported': $('#date_reported').val(),
+            'date_incident': $('#date_incident').val(),
+            'status_id': $('#status_id').val(),
+            'complainant': $('#complainant').val(),
+            'respondent': $('#respondent').val()
+        }
+
+        Controller.POST('/api/incident/upsert', data).done(function (result) {
+            console.log(result)
+            if (result.success == true) {
+                location.reload()
+            }
+            else {
+
+                if (result.errors.case_number) $('#case_number_error').html(result.errors.case_number)
+                if (result.errors.case_title) $('#case_title_error').html(result.errors.case_title)
+                if (result.errors.location) $('#location_error').html(result.errors.location)
+                if (result.errors.narrative) $('#narrative_error').html(result.errors.narrative)
+                if (result.errors.date_reported) $('#date_reported_error').html(result.errors.date_reported)
+                if (result.errors.date_incident) $('#date_incident_error').html(result.errors.date_incident)
+                if (result.errors.status_id) $('#status_id_error').html(result.errors.status_id)
+                if (result.errors.complainant) $('#complainant_error').html(result.errors.complainant)
+                if (result.errors.respondent) $('#respondent_error').html(result.errors.respondent)
+
+            }
+
+        })
+
+    }
+
+    var Edit = function (e) {
+
+        $('#case_number_error').html('')
+        $('#case_title_error').html('')
+        $('#location_error').html('')
+        $('#narrative_error').html('')
+        $('#date_reported_error').html('')
+        $('#date_incident_error').html('')
+        $('#status_id_error').html('')
+        $('#complainant_error').html('')
+        $('#respondent_error').html('')
+
+        id = e.parentNode.parentNode.dataset.id
+
+        Controller.GET('/api/incident/get/' + id, {}).done(function (result) {
+
+            $('#id').val(result.id)
+            $('#case_number').val(result.case_number)
+            $('#case_title').val(result.case_title)
+            $('#location').val(result.location)
+            $('#narrative').val(result.narrative)
+            $('#date_reported').val(result.date_reported)
+            $('#date_incident').val(result.date_incident)
+            $('#status_id').val(result.status_id)
+            $('#complainant').val(result.complainant_id)
+            $('#respondent').val(result.respondent)
+
+            $(modal).modal({
+                "backdrop": "static",
+                "keyboard": true,
+                "show": true
+            })
+
+        })
+
+    }
+
+    var Delete = function (e) {
+
+        id = e.parentNode.parentNode.dataset.id
+
+        bootbox.confirm({
+            message: "Delete case? All schedules set for this case will be lost.",
+            buttons: {
+                confirm: {
+                    label: 'Delete',
+                    className: 'btn-sm btn-danger'
+                },
+                cancel: {
+                    label: 'Cancel',
+                    className: 'btn-sm btn-info'
+                }
+            },
+            callback: function (result) {
+                if (result) {
+
+                    Controller.POST('/api/incident/delete', { 'id': id }).done(function (result) {
+                        if (result.success) e.parentNode.parentNode.remove()
+                    })
+
+                }
+            }
+        })
+    }
+
+</script>
+{% endblock %}

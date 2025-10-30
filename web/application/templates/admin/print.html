@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reports</title>
+</head>
+<body>
+    <table class="table align-items-center table-flush">
+        <thead class="thead-light">
+            <tr>
+                <th scope="col">Case No.</th>
+                <th scope="col">Case Title</th>
+                <th scope="col">Complainant</th>
+                <th scope="col">Respondent</th>
+                <th scope="col">Date Filed</th>
+                <th scope="col">First Hearing</th>
+                <th scope="col">Last Hearing</th>
+                <th scope="col">Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for incident in data.incidents %}
+            <tr>
+                <th scope="row">
+                    {{incident.case_number}}
+                </th>
+                <td>
+                    {{incident.case_title}}
+                </td>
+                <td>
+                    {{incident.complainant.first_name}} {{incident.complainant.last_name}}
+                </td>
+                <td>
+                    {{incident.respondent}}
+                </td>
+                <td>
+                    {{incident.date_reported.strftime('%h %d %Y %I:%M %p')}}
+                </td>
+                <td>
+                    {{(incident.incidents_schedules|first).schedule.strftime('%h %d %Y %I:%M %p') if
+                    (incident.incidents_schedules|length) > 0 else 'NONE'}}
+                </td>
+                <td>
+                    {{(incident.incidents_schedules|last).schedule.strftime('%h %d %Y %I:%M %p') if
+                    (incident.incidents_schedules|length) > 1 else 'NONE'}}
+                </td>
+                <td>
+                    {{incident.status.status}}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

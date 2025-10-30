@@ -1,0 +1,56 @@
+{% extends 'member/shared/layout.html' %}
+{% block title %}
+Dashboard
+{% endblock %}
+
+{% block css %}{% endblock %}
+
+{% block content %}
+<div class="main-content" id="panel">
+
+    <!-- Header -->
+    <div class="header bg-primary pb-6">
+        <div class="container-fluid">
+            <div class="header-body">
+                <div class="row align-items-center py-4">
+                    <div class="col-lg-6 col-7">
+                        <p class="display-2 text-white d-inline-block mb-0">Notifications</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Page content -->
+    <div class="container-fluid mt--6">
+        <div class="row">
+            <div class="col">
+                <div class="card">
+                    <div class="card-header border-0">
+                        <a class="btn btn-sm btn-primary float-right" href="/member/notifications">Back</a>
+                    </div>
+                    <div class="card-body border-0">
+                        <div class="row">
+                            <div class="col">
+                                <span class="d-block small">{{data.notification.created_at.strftime('%h %d %Y %I:%M %p')}}</span>
+                                <br>
+                                <span class="d-block">{{data.notification.content}}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+
+    function Refresh() {
+        window.location.href = '/member/notifications'
+    }
+
+</script>
+{% endblock %}

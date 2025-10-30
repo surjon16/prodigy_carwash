@@ -1,0 +1,389 @@
+{% extends 'shared/layout.html' %}
+{% block title %}
+Settlement Schedules
+{% endblock %}
+
+{% block css %}{% endblock %}
+
+{% block modal %}
+<div class="modal fade" id="modal-default">
+    <div class="modal-dialog">
+        <div class="modal-content card bg-secondary shadow">
+            <div class="modal-header card-header bg-white border-0">
+                <h4 class="card-title">Schedule Information</h4>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body card-body">
+                <div class="row">
+                    <input id="id" name="id" type="text" class="form-control form-control-alternative" hidden
+                        value="-1">
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label class="form-control-label">Case Number <span id="incident_id_error" class="h5 text-danger"></span></label>
+                            <select id="incident_id" name="incident_id" data-style="bg-white px-4 py-3 shadow-sm"
+                                class="form-control form-control-alternative selectpicker" data-live-search="true">
+                                {% for incident in data.schedule.incidents %}
+                                    <option value="{{incident.id}}">{{incident.case_number}} ({{incident.case_title}} at {{incident.location}})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label class="form-control-label">Details <span id="details_error"
+                                    class="h5 text-danger"></span></label>
+                            <textarea id="details" name="details" type="text" class="form-control form-control-alternative" rows="12"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label for="schedule" class="form-control-label">Schedule <span id="schedule_error"
+                                    class="h5 text-danger"></span></label>
+                            <input class="form-control form-control-alternative" type="datetime-local" id="schedule">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-sm btn-danger" data-dismiss="modal">Cancel</button>
+                <button class="btn btn-sm btn-success" onclick="Save()">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="main-content" id="panel">
+    <!-- Header -->
+    <div class="header bg-primary pb-6">
+        <div class="container-fluid">
+            <div class="header-body">
+                <div class="row align-items-center py-4">
+                    <div class="col-lg-6 col-7">
+                        <p class="display-2 text-white d-inline-block mb-0">Settlement Schedule</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Page content -->
+    <div class="container-fluid mt--6">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header border-1">
+                        <div class="row align-items-center">
+                            <div class="col text-left">
+                                <!-- <button class="btn btn-sm btn-primary" onclick="AddNew()">Add New</button> -->
+                                <h4 class="card-title">Schedule Details</h4>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <label class="form-control-label">Case</label>
+                                    <input class="form-control" type="text" value="{{data.schedule.incident.case_title}} {{data.schedule.incident.case_number}}">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <label class="form-control-label">Notice of Hearing</label>
+                                    <textarea name="details" type="text" class="form-control" rows="12">{{data.schedule.details}}</textarea>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <label for="schedule" class="form-control-label">Schedule</label>
+                                    <input class="form-control" type="text" value="{{data.schedule.schedule}}">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header border-1">
+                        <div class="row align-items-center">
+                            <div class="col text-left">
+                                <!-- <button class="btn btn-sm btn-primary" onclick="AddNew()">Add New</button> -->
+                                <h4 class="card-title">Case Details</h4>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-control-label">Case Title</label>
+                                    <input type="text" class="form-control" value="{{data.schedule.incident.case_title}}">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-control-label">Case Number</label>
+                                    <input type="text" class="form-control" value="{{data.schedule.incident.case_number}}">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <label class="form-control-label">Facts of the Complaint</label>
+                                    <textarea id="narrative" name="narrative" type="text" class="form-control"
+                                        rows="12">{{data.schedule.incident.narrative}}</textarea>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <label class="form-control-label">Case Location</label>
+                                    <input type="text" class="form-control" value="{{data.schedule.incident.location}}">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="date_incident" class="form-control-label">Incident Date</label>
+                                    <input class="form-control" type="text" value="{{data.schedule.incident.date_incident}}">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="date_reported" class="form-control-label">Date Reported</label>
+                                    <input class="form-control" type="text" value="{{data.schedule.incident.date_reported}}">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-control-label">Complainant</label>
+                                    <input class="form-control" type="text"
+                                        value="{{data.schedule.incident.complainant.first_name}} {{data.schedule.incident.complainant.last_name}}">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-control-label">Respondent</label>
+                                    <input type="text" class="form-control" value="{{data.schedule.incident.respondent}}">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label class="form-control-label">Status</label>
+                                    <input class="form-control" type="text" value="{{data.schedule.incident.status.status}}">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header border-1">
+                        <div class="row align-items-center">
+                            <div class="col text-left">
+                                <h4 class="card-title">Attendance</h4>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table align-items-center table-flush">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th scope="col">Complainant</th>
+                                    <th scope="col">Respondent</th>
+                                    <th scope="col">Assigned Lupon</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>
+                                        {{data.schedule.incident.complainant.first_name}} {{data.schedule.incident.complainant.last_name}}
+                                    </td>
+                                    <td>
+                                        {{data.schedule.incident.respondent}}
+                                    </td>
+                                    <td>
+                                        {% for lupon in data.lupon %}
+                                            {% if lupon.id | string in data.schedule.lupon %}
+                                                {{lupon.first_name}} {{lupon.last_name}} <br>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header border-1">
+                        <div class="row align-items-center">
+                            <div class="col text-left">
+                                <h4 class="card-title">Minutes Of Hearing</h4>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <textarea name="details" type="text" class="form-control" rows="12">{{data.schedule.minutes}}</textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+
+    setSideBar('#menu-schedules')
+
+    var modal = '#modal-default'
+    var notice =
+        'NOTICE OF HEARING' +
+        ('\n') +
+        '(MEDIATION PROCEEDINGS)' +
+        ('\n') +
+        ('\n') +
+        'TO: <FULL NAME>' +
+        ('\n') +
+        '<ADDRESS>' +
+        ('\n') +
+        '<(Complainant)>' +
+        ('\n') +
+        ('\n') +
+        'You are hereby required to appear at Kauswagan Barangay Hall on the ______________ day of ______________ at ______________ for a hearing of your complaint.' +
+        ('\n') +
+        ('\n') +
+        ('\n') +
+        ('\n') +
+        ('\n')
+
+    var AddNew = function () {
+
+        $('#incident_id_error').html('')
+        $('#details_error').html('')
+        $('#schedule_error').html('')
+
+        $('#id').val('-1')
+        $('#incident_id').val('')
+        $('#details').html(notice)
+        $('#schedule').val('')
+
+        $(modal).modal({
+            "backdrop": "static",
+            "keyboard": true,
+            "show": true
+        })
+
+    }
+
+    var Save = function () {
+
+        data = {
+            'id': $('#id').val(),
+            'incident_id': $('#incident_id').val(),
+            'details': $('#details').val(),
+            'schedule': $('#schedule').val()
+        }
+
+        $('#incident_id_error').html('')
+        $('#details_error').html('')
+        $('#schedule_error').html('')
+
+        Controller.POST('/api/schedule/upsert', data).done(function (result) {
+            if (result.success == true) {
+                location.reload()
+            }
+            else {
+
+                if (result.errors.incident_id) $('#incident_id_error').html(result.errors.incident_id)
+                if (result.errors.details) $('#details_error').html(result.errors.details)
+                if (result.errors.schedule) $('#schedule_error').html(result.errors.schedule)
+            }
+        })
+
+    }
+
+    var Edit = function (e) {
+
+        $('#incident_id_error').html('')
+        $('#details_error').html('')
+        $('#schedule_error').html('')
+
+        id = e.parentNode.parentNode.dataset.id
+
+        Controller.GET('/api/schedule/get/' + id, {}).done(function (result) {
+
+            $('#id').val(result.id)
+            $('#incident_id').val(result.incident_id)
+            $('#details').val(result.details)
+            $('#schedule').val(result.schedule)
+
+            $(modal).modal({
+                "backdrop": "static",
+                "keyboard": true,
+                "show": true
+            })
+
+        })
+
+    }
+
+    var Delete = function (e) {
+
+        id = e.parentNode.parentNode.dataset.id
+
+        bootbox.confirm({
+            message: "Delete item?",
+            buttons: {
+                confirm: {
+                    label: 'Delete',
+                    className: 'btn-sm btn-danger'
+                },
+                cancel: {
+                    label: 'Cancel',
+                    className: 'btn-sm btn-info'
+                }
+            },
+            callback: function (result) {
+                if (result) {
+
+                    Controller.POST('/api/schedule/delete', { 'id': id }).done(function (result) {
+                        if (result.success) e.parentNode.parentNode.remove()
+                    })
+
+                }
+            }
+        })
+    }
+
+</script>
+{% endblock %}

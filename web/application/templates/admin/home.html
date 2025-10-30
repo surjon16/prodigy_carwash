@@ -1,0 +1,402 @@
+{% extends 'shared/layout.html' %}
+{% block title %}
+    Appointments
+{% endblock %}
+
+{% block css %}
+<style>
+    .calendar { border: 1px solid #dee2e6; }
+    .calendar .time-col { width: 80px; background: #f8f9fa; text-align: right; padding-right: 5px; }
+    .calendar .day-col { min-width: 150px; border-left: 1px solid #dee2e6; position: relative; }
+    .calendar .time-slot { height: 60px; border-top: 1px solid #dee2e6; position: relative; }
+    .calendar .event {
+        position: absolute;
+        top: 5px; left: 5px; right: 5px;
+        background-color: #0d6efd; color: #fff;
+        border-radius: 4px; padding: 5px;
+        font-size: 0.8rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="main-content" id="panel">
+    <!-- Header -->
+    <div class="header bg-primary pb-6">
+        <div class="container-fluid">
+            <div class="header-body">
+                <div class="row align-items-center py-4">
+                    <div class="col-lg-6 col-7">
+                        <p class="display-2 text-white d-inline-block mb-0">Appointments</p>
+                    </div>
+                </div>
+                <!-- <div class="row">
+                    <div class="col-xl-4 col-md-6">
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col">
+                                        <h5 class="card-title text-uppercase text-muted mb-0">Recorded Cases</h5>
+                                        <span class="h2 font-weight-bold mb-0">{{data.incidents|length}}</span>
+                                    </div>
+                                    <div class="col-auto">
+                                        <div class="icon icon-shape bg-gradient-red text-white rounded-circle shadow">
+                                            <i class="ni ni-briefcase-24"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-4 col-md-6">
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col">
+                                        <h5 class="card-title text-uppercase text-muted mb-0">Registered Accounts</h5>
+                                        <span class="h2 font-weight-bold mb-0">{{data.accounts|length}}</span>
+                                    </div>
+                                    <div class="col-auto">
+                                        <div class="icon icon-shape bg-gradient-orange text-white rounded-circle shadow">
+                                            <i class="ni ni-single-02"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-4 col-md-6">
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col">
+                                        <h5 class="card-title text-uppercase text-muted mb-0">Scheduled Mediation</h5>
+                                        <span class="h2 font-weight-bold mb-0">{{data.schedules|length}}</span>
+                                    </div>
+                                    <div class="col-auto">
+                                        <div class="icon icon-shape bg-gradient-green text-white rounded-circle shadow">
+                                            <i class="ni ni-calendar-grid-58"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div> -->
+            </div>  
+        </div>
+    </div>
+
+    <!-- Page content -->
+    <div class="container-fluid mt--6">
+        <div class="row">
+            <div class="col">
+                <div class="card">
+                    <div class="card-header border-0">
+                        <!-- <div class="input-daterange datepicker row align-items-center">
+                            <div class="col">
+                                <div class="form-group">
+                                    <div class="input-group">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text"><i class="ni ni-calendar-grid-58"></i></span>
+                                        </div>
+                                        <input class="form-control" placeholder="Start date" type="text" value="">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="form-group">
+                                    <div class="input-group">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text"><i class="ni ni-calendar-grid-58"></i></span>
+                                        </div>
+                                        <input class="form-control" placeholder="End date" type="text" value="">
+                                    </div>
+                                </div>
+                            </div>
+                        </div> -->
+                        <div class="nav-wrapper">
+                            <ul class="nav nav-pills" id="tabs-icons-text" role="tablist">
+                                <li class="nav-item">
+                                    <a class="nav-link mb-sm-3 mb-md-0 active" id="tabs-icons-text-1-tab" data-toggle="tab" href="#tabs-icons-text-1" role="tab" aria-controls="tabs-icons-text-1" aria-selected="true">
+                                        <i class="ni ni-active-40 mr-2"></i>Current
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link mb-sm-3 mb-md-0" id="tabs-icons-text-2-tab" data-toggle="tab" href="#tabs-icons-text-2" role="tab" aria-controls="tabs-icons-text-2" aria-selected="true">
+                                        <i class="ni ni-notification-70 mr-2"></i>Requests
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link mb-sm-3 mb-md-0" id="tabs-icons-text-3-tab" data-toggle="tab" href="#tabs-icons-text-3" role="tab" aria-controls="tabs-icons-text-3" aria-selected="false">
+                                        <i class="ni ni-collection mr-2"></i>Upcoming
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="card shadow">
+                            <div class="card-body p-03">
+                                <div class="tab-content" id="myTabContent">
+                                    <div class="tab-pane fade show active" id="tabs-icons-text-1" role="tabpanel" aria-labelledby="tabs-icons-text-1-tab">
+                                        <div class="table-responsive">
+                                            <!-- Projects table -->
+                                            <table class="table align-items-center table-flush">
+                                                <thead class="thead-light">
+                                                    <tr>
+                                                        <th scope="col">Date</th>
+                                                        <th scope="col">Time</th>
+                                                        <th scope="col">Customer</th>
+                                                        <th scope="col">Assignee - Shift</th>
+                                                        <th scope="col">Service - Bay</th>
+                                                        <th scope="col">Vehicle</th>
+                                                        <th scope="col">Status</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% for appointment in data.current | sort(attribute="start_time") %}
+                                                        <tr>
+                                                            <th scope="row">
+                                                                {{ appointment.start_time.strftime("%a %b %d, %Y") }}
+                                                            </th>
+                                                            <td>
+                                                                {{ appointment.start_time.strftime("%I:%M%p") }} - {{ appointment.end_time.strftime("%I:%M%p") }}
+                                                            </td>
+                                                            <td>
+                                                                {{ appointment.customer.account.full_name }}
+                                                            </td>
+                                                            <td>
+                                                                {% for staff in appointment.staffs %}
+                                                                    {{ staff.account.full_name }} ({{ staff.shift(appointment.start_time.strftime('%A')) }}) <br>
+                                                                {% endfor %}
+                                                            </td>
+                                                            <td>
+                                                                {{ appointment.service.name }} on {{ appointment.bay.bay }}
+                                                            </td>
+                                                            <td>
+                                                                {{ appointment.vehicle.plate_number }} {{ appointment.vehicle.model }}
+                                                            </td>
+                                                            <td>
+                                                                {{ appointment.status.status }}
+                                                            </td>
+                                                        </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                    <div class="tab-pane fade" id="tabs-icons-text-2" role="tabpanel" aria-labelledby="tabs-icons-text-2-tab">
+                                        <div class="table-responsive">
+                                            <!-- Projects table -->
+                                            <table class="table align-items-center table-flush">
+                                                <thead class="thead-light">
+                                                    <tr>
+                                                        <th scope="col">Date</th>
+                                                        <th scope="col">Time</th>
+                                                        <th scope="col">Customer</th>
+                                                        <th scope="col">Assigned Staff</th>
+                                                        <th scope="col">Service - Bay</th>
+                                                        <th scope="col">Vehicle</th>
+                                                        <th scope="col">Status</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% for appointment in data.requests | sort(attribute="start_time") %}
+                                                        <tr>
+                                                            <th scope="row">
+                                                                {{ appointment.start_time.strftime("%a %b %d, %Y") }}
+                                                            </th>
+                                                            <td>
+                                                                {{ appointment.start_time.strftime("%I:%M%p") }} - {{ appointment.end_time.strftime("%I:%M%p") }}
+                                                            </td>
+                                                            <td>
+                                                                {{ appointment.customer.account.first_name }} {{ appointment.customer.account.last_name }}
+                                                            </td>
+                                                            <td>
+                                                                {% for staff in appointment.staffs %}
+                                                                    {{ staff.account.first_name }} {{ staff.account.last_name }} <br>
+                                                                {% endfor %}
+                                                            </td>
+                                                            <td>
+                                                                {{ appointment.service.name }} on {{ appointment.bay.bay }}
+                                                            </td>
+                                                            <td>
+                                                                {{ appointment.vehicle.plate_number }} {{ appointment.vehicle.model }}
+                                                            </td>
+                                                            <td>
+                                                                {{ appointment.status.status }}
+                                                            </td>
+                                                        </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                    <div class="tab-pane fade" id="tabs-icons-text-3" role="tabpanel" aria-labelledby="tabs-icons-text-3-tab">
+                                        <div class="table-responsive">
+                                            <!-- Projects table -->
+                                            <table class="table align-items-center table-flush">
+                                                <thead class="thead-light">
+                                                    <tr>
+                                                        <th scope="col">Date</th>
+                                                        <th scope="col">Time</th>
+                                                        <th scope="col">Customer</th>
+                                                        <th scope="col">Assigned Staff</th>
+                                                        <th scope="col">Service - Bay</th>
+                                                        <th scope="col">Vehicle</th>
+                                                        <th scope="col">Status</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% for appointment in data.upcoming | sort(attribute="start_time") %}
+                                                        <tr>
+                                                            <th scope="row">
+                                                                {{ appointment.start_time.strftime("%a %b %d, %Y") }}
+                                                            </th>
+                                                            <td>
+                                                                {{ appointment.start_time.strftime("%I:%M%p") }} - {{ appointment.end_time.strftime("%I:%M%p") }}
+                                                            </td>
+                                                            <td>
+                                                                {{ appointment.customer.account.first_name }} {{ appointment.customer.account.last_name }}
+                                                            </td>
+                                                            <td>
+                                                                {% for staff in appointment.staffs %}
+                                                                    {{ staff.account.first_name }} {{ staff.account.last_name }} <br>
+                                                                {% endfor %}
+                                                            </td>
+                                                            <td>
+                                                                {{ appointment.service.name }} on {{ appointment.bay.bay }}
+                                                            </td>
+                                                            <td>
+                                                                {{ appointment.vehicle.plate_number }} {{ appointment.vehicle.model }}
+                                                            </td>
+                                                            <td>
+                                                                {{ appointment.status.status }}
+                                                            </td>
+                                                        </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- <div class="card">
+                    <div class="card-header border-0">
+
+                        <div class="form-group">
+                            <label class="form-control-label">
+                                Schedule
+                            </label>
+                            <input required id="schedule" name="schedule" type=date autocomplete="false" class="form-control">
+                        </div>
+
+                        <form action="/admin/appointments/search" method="post">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                            <div class="row d-flex justify-content-start">
+                                <div class="col-md-1 pr-0">
+                                    <label class="form-control-label">Select Date</label>
+                                </div>
+                                <div class="col-md-3">
+                                    <input id="start_date" name="start_date" type="text" class="form-control form-control-alternative datepicker">
+                                </div>
+                                <div class="col-md-1">
+                                    <button class="btn btn-md btn-primary" type="submit">Search</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table align-items-center table-flush">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th scope="col">Date</th>
+                                    <th scope="col">Time</th>
+                                    <th scope="col">Bay</th>
+                                    <th scope="col">Assigned Staff</th>
+                                    <th scope="col">Service</th>
+                                    <th scope="col">Vehicle</th>
+                                    <th scope="col">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if data.appointments %}
+                                    {% for appointment in data.appointments | sort(attribute="start_time") %}
+                                        <tr>
+                                            <th scope="row">
+                                                {{ appointment.start_time.strftime("%a %b %d, %Y") }}
+                                            </th>
+                                            <td>
+                                                {{ appointment.start_time.strftime("%I:%M%p") }} - {{ appointment.end_time.strftime("%I:%M%p") }}
+                                            </td>
+                                            <td>
+                                                {{ appointment.bay.bay }}
+                                            </td>
+                                            <td>
+                                                {% for washer in appointment.washers %}
+                                                    {{ washer.first_name }} {{ washer.last_name }} <p></p>
+                                                {% endfor %}
+                                            </td>
+                                            <td>
+                                                {{ appointment.service.name }}
+                                            </td>
+                                            <td>
+                                                {{ appointment.vehicle.plate_number }} {{ appointment.vehicle.model }}
+                                            </td>
+                                            <td>
+                                                {{ appointment.status.status }}
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <p>No appointments found for this date.</p>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div> -->
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+
+<!-- <script
+    src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"
+    integrity="sha512-qTXRIMyZIFb8iQcfjXWCO8+M5TDuu46cAy2TcG12e3qivppEG1i5nSyRkTtOiRGiEb7KKtAOAs5qYdUiZiQNNQ=="
+    crossorigin="anonymous"
+    referrerpolicy="no-referrer"
+></script> -->
+
+<script>
+    
+    setSideBar('#menu-home');
+
+    schedules = []
+    if (result.status) status_id = 5;
+    days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    $("#schedule").datepicker("show");
+    $("#schedule").datepicker({
+        todayHighlight: true,
+        format: 'yyyy-mm-dd',
+        startDate: new Date(),
+        beforeShowDay: function(date) {
+            new_date = new Date()
+            if (date.getDate() == new_date.getDate() && date.getMonth() == new_date.getMonth() && date.getYear() == new_date.getYear()) {
+                if (status_id == 5) return { enabled: true }
+                else return { enabled: false }
+            }
+            else if ($.inArray(days[date.getDay()], schedules) !== -1) {
+                return { enabled: true }
+            }
+            else return { enabled: false }
+        }
+    })
+
+</script>
+
+{% endblock %}
