@@ -110,4 +110,5 @@ DIFFICULT SCENARIOS
   Risk: Washer #2 is stand by. Long waiting time.
 
 - How to verify vehicle type? Customers might book for Sedan but bring an SUV. 
+  Same goes to Motorcycles, how do we categorize them as Small Bike or Big Bike.
   Risk: If overlooked, price will be cheaper.

@@ -13,6 +13,7 @@ from data.models import (
     Schedules
 )
 
+from data.services.staff import Staff
 from data.utils import *
 
 logger = logging.getLogger(__name__)
@@ -2128,3 +2129,54 @@ def suggest_appointments_for_customer(customer_id, vehicle_id, appointment_date)
     except Exception as e:
         db.session.rollback()
         return {"error": str(e)}
+    
+    from datetime import datetime
+
+def get_bay_appointments_table():
+    """
+    Returns a structured table (dict) showing all bays and their appointments
+    for today and upcoming dates, sorted chronologically by start_time.
+    Appointments with the same start time appear on the same row.
+    Blank cells are left for bays with no booking at that time.
+    """
+    now = datetime.now()
+
+    bays = Bays.query.all()
+    bay_names = [bay.bay for bay in bays]
+
+    # Collect all appointments across all bays (today + upcoming)
+    all_appointments = []
+    for bay in bays:
+        for appt in bay.appointments:
+            if appt.start_time and appt.start_time >= now:
+                all_appointments.append(appt)
+
+    # Sort all appointments by start time
+    all_appointments.sort(key=lambda a: a.start_time)
+
+    # Group appointments by their exact start time
+    grouped_by_time = {}
+    for appt in all_appointments:
+        key = appt.start_time.strftime("%Y-%m-%d %H:%M")
+        if key not in grouped_by_time:
+            grouped_by_time[key] = {}
+        grouped_by_time[key][appt.bay.bay] = appt
+
+    # Build table rows
+    table_rows = []
+    for time_key in sorted(grouped_by_time.keys()):
+        time_group = grouped_by_time[time_key]
+        row = []
+        for bay in bays:
+            appt = time_group.get(bay.bay)
+            if appt:
+                row.append(appt)
+            else:
+                row.append(None)
+        table_rows.append(row)
+
+    return {
+        "columns": bay_names,  # Bay headers
+        "rows": table_rows     # Chronological rows
+    }
+
