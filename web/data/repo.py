@@ -14,6 +14,7 @@ from data.models import (
 )
 
 from data.services.staff import Staff
+from data.services.customer import Customer
 from data.utils import *
 
 logger = logging.getLogger(__name__)
@@ -1185,8 +1186,8 @@ def populate():
     # SERVICES
     # ============================================================= 
     services = [
-        ('Small Bike',          '', 200, 45, 1, 'Small Bike'),
-        ('Big Bike',            '', 300, 45, 1, 'Big Bike'),
+        ('Small Bike',          '', 200, 45, 1, 'Motorcycle'),
+        ('Big Bike',            '', 300, 45, 1, 'Motorcycle'),
         ('Interior',            '', 150, 45, 2, 'Sedan'),
         ('Exterior',            '', 250, 45, 2, 'Sedan'),
         ('Interior + Exterior', '', 300, 90, 2, 'Sedan'),
@@ -1221,7 +1222,7 @@ def populate():
     # STAFF ACCOUNTS
     # =============================================================
     staff_accounts = []
-    for i in range(1, 7):
+    for i in range(1, 8):
         acc = Accounts(
             first_name='Staff',
             last_name=f'{i:02d}',
@@ -1469,7 +1470,7 @@ def get_available_bay_and_staff(start_time, duration, washers_needed, recursion_
 
     # Step 1: Get all bays and on-shift staff
     all_bays = Bays.query.all()
-    all_staff = Staffs.query.filter(Staffs.is_on_shift == True).all()
+    all_staff = Staffs.query.filter(Staffs.is_on_shift == True, Staffs.is_front_desk == False).all()
 
     log.info(f"Found {len(all_bays)} total bays, {len(all_staff)} on-shift staff")
 
@@ -1580,11 +1581,18 @@ def quick_book(service_id, customer_id=None, vehicle_id=None, appointment_date=N
         washers_needed = service.washers_needed
 
         now = datetime.now()
-        if appointment_date: 
+        
+        if appointment_date:
+            appointment_date = datetime.fromisoformat(appointment_date)
+
             # Convert appointment_date to datetime if passed as string
             if isinstance(appointment_date, str):
                 now = datetime.strptime(appointment_date, "%Y-%m-%d %H:%M")
-                now = now.replace(second=0, microsecond=0) # truncate seconds
+            else:
+                now = appointment_date
+                
+
+        now = now.replace(second=0, microsecond=0) # truncate seconds
 
         # Get available slot
         slot = get_available_bay_and_staff(now, duration, washers_needed)
@@ -1612,15 +1620,15 @@ def quick_book(service_id, customer_id=None, vehicle_id=None, appointment_date=N
             db.session.add(customer)
             db.session.flush()
 
-            # Create temporary vehicle record
-            if not vehicle:
-                vehicle = Vehicles(
-                    model="Unknown",
-                    type=service.type,
-                    customer_id=customer.id
-                )
-                db.session.add(vehicle)
-                db.session.flush()
+        # Create temporary vehicle record
+        if not vehicle:
+            vehicle = Vehicles(
+                model="Unknown",
+                type=service.type,
+                customer_id=customer.id
+            )
+            db.session.add(vehicle)
+            db.session.flush()
 
         # Status handling
         status = Status.query.filter_by(status="In Queue").first()
@@ -1663,9 +1671,13 @@ def check_or_suggest_appointment(service_id, appointment_date):
     """
 
     try:
-        # --- Parse appointment datetime ---
-        if isinstance(appointment_date, str):
-            appointment_date = datetime.strptime(appointment_date, "%Y-%m-%d %H:%M")
+
+        if appointment_date:
+            appointment_date = datetime.fromisoformat(appointment_date)
+
+            # --- Parse appointment datetime ---
+            if isinstance(appointment_date, str):
+                appointment_date = datetime.strptime(appointment_date, "%Y-%m-%d %H:%M")
 
         # # --- Skip past times ---
         # if appointment_date < datetime.now():
@@ -1688,8 +1700,9 @@ def check_or_suggest_appointment(service_id, appointment_date):
                     "message": "The selected appointment time is available!",
                     "service": service.name,
                     "slot": {
-                        "start_time": slot["start_time"].strftime("%Y-%m-%d %H:%M"),
-                        "end_time": slot["end_time"].strftime("%Y-%m-%d %H:%M"),
+                        "start_time": slot["start_time"].strftime("%Y-%m-%d %I:%M %p"),
+                        "end_time": slot["end_time"].strftime("%Y-%m-%d %I:%M %p"),
+                        "schedule": f"{slot['start_time'].strftime('%a %b %d, %Y %I:%M %p')} - {slot['end_time'].strftime('%I:%M %p')}",
                         "bay": slot["bay"].bay,
                         "staff": [s.account.full_name for s in slot["staff"]],
                     }
@@ -1703,11 +1716,13 @@ def check_or_suggest_appointment(service_id, appointment_date):
         attempts = 0
         checked_times = set()
 
+        # %a %b %d, %Y %I:%M %p
         # append the slot returned after finding exact slot
         if slot:
             suggestions.append({
-                "start_time": slot["start_time"].strftime("%Y-%m-%d %H:%M"),
-                "end_time": slot["end_time"].strftime("%Y-%m-%d %H:%M"),
+                "start_time": slot["start_time"].strftime("%Y-%m-%d %I:%M %p"),
+                "end_time": slot["end_time"].strftime("%Y-%m-%d %I:%M %p"),
+                "schedule": f"{slot['start_time'].strftime('%a %b %d, %Y %I:%M %p')} - {slot['end_time'].strftime('%I:%M %p')}",
                 "bay": slot["bay"].bay,
                 "staff": [s.account.full_name for s in slot["staff"]],
             })
@@ -1735,8 +1750,9 @@ def check_or_suggest_appointment(service_id, appointment_date):
                 if test_slot:
                     if test_slot['start_time'] == test_time:
                         suggestions.append({
-                            "start_time": test_slot["start_time"].strftime("%Y-%m-%d %H:%M"),
-                            "end_time": test_slot["end_time"].strftime("%Y-%m-%d %H:%M"),
+                            "start_time": test_slot["start_time"].strftime("%Y-%m-%d %I:%M %p"),
+                            "end_time": test_slot["end_time"].strftime("%Y-%m-%d %I:%M %p"),
+                            "schedule": f"{slot['start_time'].strftime('%a %b %d, %Y %I:%M %p')} - {slot['end_time'].strftime('%I:%M %p')}",
                             "bay": test_slot["bay"].bay,
                             "staff": [s.account.full_name for s in test_slot["staff"]],
                         })
@@ -2131,52 +2147,4 @@ def suggest_appointments_for_customer(customer_id, vehicle_id, appointment_date)
         return {"error": str(e)}
     
     from datetime import datetime
-
-def get_bay_appointments_table():
-    """
-    Returns a structured table (dict) showing all bays and their appointments
-    for today and upcoming dates, sorted chronologically by start_time.
-    Appointments with the same start time appear on the same row.
-    Blank cells are left for bays with no booking at that time.
-    """
-    now = datetime.now()
-
-    bays = Bays.query.all()
-    bay_names = [bay.bay for bay in bays]
-
-    # Collect all appointments across all bays (today + upcoming)
-    all_appointments = []
-    for bay in bays:
-        for appt in bay.appointments:
-            if appt.start_time and appt.start_time >= now:
-                all_appointments.append(appt)
-
-    # Sort all appointments by start time
-    all_appointments.sort(key=lambda a: a.start_time)
-
-    # Group appointments by their exact start time
-    grouped_by_time = {}
-    for appt in all_appointments:
-        key = appt.start_time.strftime("%Y-%m-%d %H:%M")
-        if key not in grouped_by_time:
-            grouped_by_time[key] = {}
-        grouped_by_time[key][appt.bay.bay] = appt
-
-    # Build table rows
-    table_rows = []
-    for time_key in sorted(grouped_by_time.keys()):
-        time_group = grouped_by_time[time_key]
-        row = []
-        for bay in bays:
-            appt = time_group.get(bay.bay)
-            if appt:
-                row.append(appt)
-            else:
-                row.append(None)
-        table_rows.append(row)
-
-    return {
-        "columns": bay_names,  # Bay headers
-        "rows": table_rows     # Chronological rows
-    }
 

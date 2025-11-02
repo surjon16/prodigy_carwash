@@ -19,6 +19,79 @@
 </style>
 {% endblock %}
 
+{% block modal %}
+<div class="modal fade" id="modal-booking">
+    <div class="modal-dialog">
+        <div class="modal-content card bg-secondary shadow">
+                <div class="modal-header card-header bg-white border-0">
+                    <h4 class="card-title">Book New Appointment</h4>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body card-body">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                            <label class="form-control-label">Vehicle Type</label>
+                            <select required id="vehicle_type" name="vehicle_type"
+                                    data-style="bg-white px-4 py-3 shadow-sm" class="form-control selectpicker"
+                                    data-live-search="true" data-max-options="1"
+                                    onchange="UpdateServiceOptions(this)">
+                                <option value="" disabled selected>Select an option</option>
+                                {% for i in data.services|map(attribute='type')|unique|list %}
+                                <option value="{{ i }}">{{ i }}</option>
+                                {% endfor %}
+                            </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                            <label class="form-control-label">Service</label>
+                            <select required id="service_id" name="service_id"
+                                    data-style="bg-white px-4 py-3 shadow-sm" class="form-control selectpicker"
+                                    data-live-search="true" data-max-options="1" onchange="CheckAppointments()">
+                                <option value="" disabled selected>Select a vehicle type first</option>
+                            </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label class="form-control-label">
+                                    Customer
+                                </label>
+                                <select required id="customer_id" name="customer_id" 
+                                        data-style="bg-03 px-4 py-3" class="form-control selectpicker" 
+                                        data-live-search="true" data-max-options="1">
+                                    <option value="" disabled selected>Select a vehicle type first</option>
+                                    {% for i in data.customers %}
+                                        <option value="{{i.id}}">{{i.account.full_name}}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label for="appointment_date" class="form-control-label">Appointment Date</label>
+                                <input class="form-control form-control-alternative" type="datetime-local" id="appointment_date" onchange="CheckAppointments()">
+                            </div>
+                            <span id="appointment_date_error" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-md btn-danger" data-dismiss="modal">Cancel</button>
+                    <button class="btn btn-md btn-success" onclick="SaveQuickBook()">BOOK NOW</button>
+                </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
 {% block content %}
 <div class="main-content" id="panel">
     <!-- Header -->
@@ -30,59 +103,6 @@
                         <p class="display-2 text-white d-inline-block mb-0">Appointments</p>
                     </div>
                 </div>
-                <!-- <div class="row">
-                    <div class="col-xl-4 col-md-6">
-                        <div class="card">
-                            <div class="card-body">
-                                <div class="row">
-                                    <div class="col">
-                                        <h5 class="card-title text-uppercase text-muted mb-0">Recorded Cases</h5>
-                                        <span class="h2 font-weight-bold mb-0">{{data.incidents|length}}</span>
-                                    </div>
-                                    <div class="col-auto">
-                                        <div class="icon icon-shape bg-gradient-red text-white rounded-circle shadow">
-                                            <i class="ni ni-briefcase-24"></i>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-xl-4 col-md-6">
-                        <div class="card">
-                            <div class="card-body">
-                                <div class="row">
-                                    <div class="col">
-                                        <h5 class="card-title text-uppercase text-muted mb-0">Registered Accounts</h5>
-                                        <span class="h2 font-weight-bold mb-0">{{data.accounts|length}}</span>
-                                    </div>
-                                    <div class="col-auto">
-                                        <div class="icon icon-shape bg-gradient-orange text-white rounded-circle shadow">
-                                            <i class="ni ni-single-02"></i>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-xl-4 col-md-6">
-                        <div class="card">
-                            <div class="card-body">
-                                <div class="row">
-                                    <div class="col">
-                                        <h5 class="card-title text-uppercase text-muted mb-0">Scheduled Mediation</h5>
-                                        <span class="h2 font-weight-bold mb-0">{{data.schedules|length}}</span>
-                                    </div>
-                                    <div class="col-auto">
-                                        <div class="icon icon-shape bg-gradient-green text-white rounded-circle shadow">
-                                            <i class="ni ni-calendar-grid-58"></i>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div> -->
             </div>  
         </div>
     </div>
@@ -93,77 +113,30 @@
             <div class="col">
                 <div class="card">
                     <div class="card-header border-0">
-                        <!-- <div class="input-daterange datepicker row align-items-center">
-                            <div class="col">
-                                <div class="form-group">
-                                    <div class="input-group">
-                                        <div class="input-group-prepend">
-                                            <span class="input-group-text"><i class="ni ni-calendar-grid-58"></i></span>
-                                        </div>
-                                        <input class="form-control" placeholder="Start date" type="text" value="">
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col">
-                                <div class="form-group">
-                                    <div class="input-group">
-                                        <div class="input-group-prepend">
-                                            <span class="input-group-text"><i class="ni ni-calendar-grid-58"></i></span>
-                                        </div>
-                                        <input class="form-control" placeholder="End date" type="text" value="">
-                                    </div>
-                                </div>
-                            </div>
-                        </div> -->
+                        <button type="submit" class="btn btn-primary m-0 float-right" onclick="QuickBook()">Quick Book</button>
                         <div class="nav-wrapper">
                             <ul class="nav nav-pills" id="tabs-icons-text" role="tablist">
                                 <li class="nav-item">
                                     <a class="nav-link mb-sm-3 mb-md-0 active" id="tabs-icons-text-1-tab" data-toggle="tab" href="#tabs-icons-text-1" role="tab" aria-controls="tabs-icons-text-1" aria-selected="true">
-                                        <i class="ni ni-active-40 mr-2"></i>Bays
+                                        <i class="ni ni-shop mr-2"></i>Bays
                                     </a>
                                 </li>
                                 <li class="nav-item">
                                     <a class="nav-link mb-sm-3 mb-md-0" id="tabs-icons-text-2-tab" data-toggle="tab" href="#tabs-icons-text-2" role="tab" aria-controls="tabs-icons-text-2" aria-selected="true">
-                                        <i class="ni ni-notification-70 mr-2"></i>Washers
+                                        <i class="ni ni-badge mr-2"></i>Staff On Duty
                                     </a>
                                 </li>
                                 <li class="nav-item">
                                     <a class="nav-link mb-sm-3 mb-md-0" id="tabs-icons-text-3-tab" data-toggle="tab" href="#tabs-icons-text-3" role="tab" aria-controls="tabs-icons-text-3" aria-selected="false">
-                                        <i class="ni ni-collection mr-2"></i>Upcoming
+                                        <i class="ni ni-calendar-grid-58 mr-2"></i>Upcoming
                                     </a>
                                 </li>
                             </ul>
                         </div>
                         <div class="card">
-                            <div class="card-body p-03">
+                            <div class="card-body p-0 min-vh-100">
                                 <div class="tab-content" id="myTabContent">
                                     <div class="tab-pane fade show active" id="tabs-icons-text-1" role="tabpanel" aria-labelledby="tabs-icons-text-1-tab">
-                                        <!-- <div class="row">
-                                            {% for bay in data.bays %}
-                                                <div class="col">
-                                                    <div class="card">
-                                                        <div class="card-header pb-0">
-                                                            <h4 class="text-center">{{bay.bay|upper}}</h4>
-                                                        </div>
-                                                        <div class="card-body">
-                                                            {% if bay.appointments|length>0 %}
-                                                                {% for appointment in bay.appointments %}
-                                                                    <h5 class="m-0">{{appointment.service.name}}</h5>
-                                                                    <h5 class="m-0">{{appointment.start_time.strftime("%a %b %d, %Y")}}</h5>
-                                                                    <h5 class="m-0">{{appointment.start_time.strftime("%I:%M%p") }} - {{ appointment.end_time.strftime("%I:%M%p")}}</h5>
-                                                                    {% for staff in appointment.staffs %}
-                                                                        <h5 class="m-0">{{staff.account.full_name}}</h5>
-                                                                    {% endfor %}
-                                                                    <hr class="my-2">
-                                                                {% endfor %}
-                                                            {% else %}
-                                                                <p class="text-center">No bookings</p>
-                                                            {% endif %}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            {% endfor %}
-                                        </div> -->
                                         <div class="table-responsive">
                                             <table class="table align-items-center table-hover table-bordered">
                                                 <thead class="thead-light">
@@ -179,10 +152,11 @@
                                                             {% for bay in row %}
                                                                 {% if bay != None %}
                                                                     <td class="p-1">
-                                                                        <span class="badge badge-lg badge-floating badge-primary border-white">
+                                                                        <span class="badge badge-lg badge-floating {% if bay.status.id == 5 %} badge-danger {% else %} badge-primary {% endif %} border-white">
                                                                             <p class="m-0">{{bay.start_time.strftime("%a %b %d, %Y")}}</p>
                                                                             <p class="m-0">{{bay.start_time.strftime("%I:%M%p") }} - {{ bay.end_time.strftime("%I:%M%p")}}</p>
                                                                             <p class="m-0">{{bay.service.name}}</p>
+                                                                            <p class="m-0">{{bay.status.status}}</p>
                                                                             <p class="m-0">{% for staff in bay.staffs %}
                                                                                 {{staff.account.full_name}}
                                                                             {% endfor %}</p>
@@ -201,43 +175,29 @@
                                     <div class="tab-pane fade" id="tabs-icons-text-2" role="tabpanel" aria-labelledby="tabs-icons-text-2-tab">
                                         <div class="table-responsive">
                                             <!-- Projects table -->
-                                            <table class="table align-items-center table-flush">
+                                            <table class="table align-items-center table-hover table-bordered">
                                                 <thead class="thead-light">
                                                     <tr>
-                                                        <th scope="col">Date</th>
-                                                        <th scope="col">Time</th>
-                                                        <th scope="col">Customer</th>
-                                                        <th scope="col">Assigned Staff</th>
-                                                        <th scope="col">Service - Bay</th>
-                                                        <th scope="col">Vehicle</th>
-                                                        <th scope="col">Status</th>
+                                                        <th scope="col">Staff</th>
+                                                        <th scope="col">Shift</th>
+                                                        <th scope="col">Front Desk</th>
+                                                        <th scope="col">Is On Duty</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
-                                                    {% for appointment in data.requests | sort(attribute="start_time") %}
+                                                    {% for staff in data.staffs %}
                                                         <tr>
-                                                            <th scope="row">
-                                                                {{ appointment.start_time.strftime("%a %b %d, %Y") }}
-                                                            </th>
                                                             <td>
-                                                                {{ appointment.start_time.strftime("%I:%M%p") }} - {{ appointment.end_time.strftime("%I:%M%p") }}
+                                                                {{ staff.full_name }}
                                                             </td>
                                                             <td>
-                                                                {{ appointment.customer.account.first_name }} {{ appointment.customer.account.last_name }}
+                                                                {{ staff.shift }}
                                                             </td>
                                                             <td>
-                                                                {% for staff in appointment.staffs %}
-                                                                    {{ staff.account.first_name }} {{ staff.account.last_name }} <br>
-                                                                {% endfor %}
+                                                                {{ staff.is_front_desk }}
                                                             </td>
                                                             <td>
-                                                                {{ appointment.service.name }} on {{ appointment.bay.bay }}
-                                                            </td>
-                                                            <td>
-                                                                {{ appointment.vehicle.plate_number }} {{ appointment.vehicle.model }}
-                                                            </td>
-                                                            <td>
-                                                                {{ appointment.status.status }}
+                                                                {{ staff.is_on_shift }}
                                                             </td>
                                                         </tr>
                                                     {% endfor %}
@@ -248,7 +208,7 @@
                                     <div class="tab-pane fade" id="tabs-icons-text-3" role="tabpanel" aria-labelledby="tabs-icons-text-3-tab">
                                         <div class="table-responsive">
                                             <!-- Projects table -->
-                                            <table class="table align-items-center table-flush">
+                                            <table class="table align-items-center table-bordered table-hover">
                                                 <thead class="thead-light">
                                                     <tr>
                                                         <th scope="col">Date</th>
@@ -281,7 +241,11 @@
                                                                 {{ appointment.service.name }} on {{ appointment.bay.bay }}
                                                             </td>
                                                             <td>
-                                                                {{ appointment.vehicle.plate_number }} {{ appointment.vehicle.model }}
+                                                                {% if appointment.vehicle.plate_number %}
+                                                                    {{ appointment.vehicle.plate_number }} {{ appointment.vehicle.model }}
+                                                                {% else %}
+                                                                    Not Indicated
+                                                                {% endif %}
                                                             </td>
                                                             <td>
                                                                 {{ appointment.status.status }}
@@ -297,119 +261,141 @@
                         </div>
                     </div>
                 </div>
-                <!-- <div class="card">
-                    <div class="card-header border-0">
-
-                        <div class="form-group">
-                            <label class="form-control-label">
-                                Schedule
-                            </label>
-                            <input required id="schedule" name="schedule" type=date autocomplete="false" class="form-control">
-                        </div>
-
-                        <form action="/admin/appointments/search" method="post">
-                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-                            <div class="row d-flex justify-content-start">
-                                <div class="col-md-1 pr-0">
-                                    <label class="form-control-label">Select Date</label>
-                                </div>
-                                <div class="col-md-3">
-                                    <input id="start_date" name="start_date" type="text" class="form-control form-control-alternative datepicker">
-                                </div>
-                                <div class="col-md-1">
-                                    <button class="btn btn-md btn-primary" type="submit">Search</button>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
-                    <div class="table-responsive">
-                        <table class="table align-items-center table-flush">
-                            <thead class="thead-light">
-                                <tr>
-                                    <th scope="col">Date</th>
-                                    <th scope="col">Time</th>
-                                    <th scope="col">Bay</th>
-                                    <th scope="col">Assigned Staff</th>
-                                    <th scope="col">Service</th>
-                                    <th scope="col">Vehicle</th>
-                                    <th scope="col">Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% if data.appointments %}
-                                    {% for appointment in data.appointments | sort(attribute="start_time") %}
-                                        <tr>
-                                            <th scope="row">
-                                                {{ appointment.start_time.strftime("%a %b %d, %Y") }}
-                                            </th>
-                                            <td>
-                                                {{ appointment.start_time.strftime("%I:%M%p") }} - {{ appointment.end_time.strftime("%I:%M%p") }}
-                                            </td>
-                                            <td>
-                                                {{ appointment.bay.bay }}
-                                            </td>
-                                            <td>
-                                                {% for washer in appointment.washers %}
-                                                    {{ washer.first_name }} {{ washer.last_name }} <p></p>
-                                                {% endfor %}
-                                            </td>
-                                            <td>
-                                                {{ appointment.service.name }}
-                                            </td>
-                                            <td>
-                                                {{ appointment.vehicle.plate_number }} {{ appointment.vehicle.model }}
-                                            </td>
-                                            <td>
-                                                {{ appointment.status.status }}
-                                            </td>
-                                        </tr>
-                                    {% endfor %}
-                                {% else %}
-                                    <p>No appointments found for this date.</p>
-                                {% endif %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div> -->
             </div>
         </div>
     </div>
+
 </div>
 {% endblock %}
 
 {% block scripts %}
 
-<!-- <script
-    src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"
-    integrity="sha512-qTXRIMyZIFb8iQcfjXWCO8+M5TDuu46cAy2TcG12e3qivppEG1i5nSyRkTtOiRGiEb7KKtAOAs5qYdUiZiQNNQ=="
-    crossorigin="anonymous"
-    referrerpolicy="no-referrer"
-></script> -->
+<script>
+  const SERVICES = {{ data.services | tojson | safe }};
+</script>
 
 <script>
     
     setSideBar('#menu-home');
 
-    schedules = []
-    if (result.status) status_id = 5;
-    days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-    $("#schedule").datepicker("show");
-    $("#schedule").datepicker({
-        todayHighlight: true,
-        format: 'yyyy-mm-dd',
-        startDate: new Date(),
-        beforeShowDay: function(date) {
-            new_date = new Date()
-            if (date.getDate() == new_date.getDate() && date.getMonth() == new_date.getMonth() && date.getYear() == new_date.getYear()) {
-                if (status_id == 5) return { enabled: true }
-                else return { enabled: false }
-            }
-            else if ($.inArray(days[date.getDay()], schedules) !== -1) {
-                return { enabled: true }
-            }
-            else return { enabled: false }
+    var modal = '#modal-booking';
+
+    var QuickBook = function() {
+        $(modal).modal({
+            "backdrop": "static",
+            "keyboard": true,
+            "show": true
+        });
+
+        // Reset selects when modal opens
+        document.getElementById("vehicle_type").selectedIndex = 0;
+        document.getElementById("service_id").innerHTML =
+            '<option value="" disabled selected>Select a vehicle type first</option>';
+        $('.selectpicker').selectpicker('refresh');
+    }
+
+
+    var UpdateServiceOptions = function(element) {
+        const selectedType = element.value;
+        const serviceDropdown = document.getElementById("service_id");
+
+        // Clear previous options
+        serviceDropdown.innerHTML = '<option value="" disabled selected>Select a service</option>';
+
+        // Filter services by type
+        const filtered = SERVICES.filter(s => s.type === selectedType);
+
+        // Add new options dynamically
+        filtered.forEach(s => {
+            const option = document.createElement("option");
+            option.value = s.id;
+            option.textContent = `${s.name} - ₱${s.price} - ETA ${s.duration} mins`;
+            serviceDropdown.appendChild(option);
+        });
+
+        // Refresh the selectpicker (if you’re using Bootstrap Select)
+        $('.selectpicker').selectpicker('refresh');
+    }
+
+    var SaveQuickBook = function() {
+
+        // Clear previous errors
+        $('#vehicle_type_error').html('')
+        $('#service_id_error').html('')
+        $('#customer_id_error').html('')
+        $('#appointment_date_error').html('')
+
+        // Gather form data
+        data = {
+            'vehicle_type'      : $('#vehicle_type').val(),
+            'service_id'        : $('#service_id').val(),
+            'customer_id'       : $('#customer_id').val(),
+            'appointment_date'  : $('#appointment_date').val(),
         }
-    })
+
+        // Call your Flask API
+        Controller.POST('/api/quick_book', data).done(function(result) {
+
+            console.log(data, result)
+
+            if (result.success == true) {
+                // Success handler
+                $('#appointmentModal').modal('hide')
+                location.reload()
+            }
+            else {
+                // Handle validation errors
+                if(result.errors.vehicle_type) $('#vehicle_type_error').html(result.errors.vehicle_type)
+                if(result.errors.service_id) $('#service_id_error').html(result.errors.service_id)
+                if(result.errors.customer_id) $('#customer_id_error').html(result.errors.customer_id)
+                if(result.errors.appointment_date) $('#appointment_date_error').html(result.errors.appointment_date)
+            }
+        })
+    }
+
+    var CheckAppointments = function() {
+
+        // Clear any previous messages
+        $('#appointment_date_error').html('');
+        $('#appointment_date_success').html('');
+
+        // Optional: show loading feedback
+        // $('#appointment_date_error').html('<small class="text-muted">Checking availability...</small>');
+        
+        data = {
+            'appointment_date'  :$('#appointment_date').val(),
+            'service_id'        : $('#service_id').val(),
+        }
+
+        if (!data['appointment_date'] || !data['service_id']) {
+            return; // don't check yet if form is incomplete
+        }
+
+        // Call your Flask API
+        Controller.POST('/api/check_or_suggest_appointment', data).done(function(result) {
+            result = result.message;
+            console.log(result)
+            if (result.available) {
+                // Slot is available
+                $('#appointment_date_error').html('');
+                $('#appointment_date_error').html('<h4 class="text-success">Slot available ✅</h4>');
+            }
+            else {
+                // Slot not available, show message
+                let message = result.message;
+                if (result.suggestions && result.suggestions.length > 0) {
+                    message += '<br>Suggested Slots:<br>';
+                    result.suggestions.forEach(function(suggestion) {
+                        message += `<h4 class="text-info">${suggestion.schedule}</h4><br>`;
+                    });
+                }
+                $('#appointment_date_error').html(`<h4 class="text-danger">${message}</h4>`);
+            }
+        })
+
+    }
+
+
 
 </script>
 

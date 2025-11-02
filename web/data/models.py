@@ -64,23 +64,25 @@ class Accounts(UserMixin, db.Model):
     def full_name(self):
         return f'{self.first_name} {self.last_name}'
 
-    def to_dict(self):
+    def to_json(self):
         return {
             'id': self.id,
-            'full_name': self.full_name,
             'first_name': self.first_name,
             'middle_name': self.middle_name,
             'last_name': self.last_name,
+            'full_name': self.full_name,
             'gender': self.gender,
             'phone_1': self.phone_1,
             'phone_2': self.phone_2,
-            'birth_date': self.birth_date.strftime('%m/%d/%Y') if self.birth_date else None,
+            'birth_date': self.birth_date.strftime('%Y-%m-%d') if self.birth_date else None,
             'email': self.email,
-            'created_at': self.created_at,
-            'updated_at': self.updated_at,
             'address': self.address,
+            'image_profile': self.image_profile,
+            'is_active': self.is_active,
             'role': self.role.role if self.role else None,
-            'role_id': self.role_id
+            'role_id': self.role_id,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None
         }
 
 # =============================================================
@@ -108,6 +110,18 @@ class Customers(UserMixin, db.Model):
     appointments = db.relationship('Appointments', back_populates='customer', cascade="all, delete-orphan")
     loyalties = db.relationship('Loyalties', back_populates='customer', cascade="all, delete-orphan")
 
+    def to_json(self):
+        return {
+            'id': self.id,
+            'is_registered': self.is_registered,
+            'is_pwd': self.is_pwd,
+            'is_senior': self.is_senior,
+            'account': self.account.to_json() if self.account else None,
+            'vehicles': [v.to_json() for v in self.vehicles],
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None
+        }
+    
 # =============================================================
 # STAFFS
 # =============================================================
@@ -134,6 +148,17 @@ class Staffs(UserMixin, db.Model):
     def shift(self, day):
         return next((s.shift for s in self.schedules if s.day.lower() == day.lower()), None)
 
+    def to_json(self):
+        return {
+            'id': self.id,
+            'is_front_desk': self.is_front_desk,
+            'is_on_shift': self.is_on_shift,
+            'account': self.account.to_json() if self.account else None,
+            'schedules': [s.to_json() for s in self.schedules],
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None
+        }
+
 # =============================================================
 # STAFF SCHEDULES
 # =============================================================
@@ -159,6 +184,18 @@ class Schedules(UserMixin, db.Model):
     def shift(self):
         return f'{self.shift_start.strftime("%I:%M %p") } - {self.shift_end.strftime("%I:%M %p") }'
 
+    def to_json(self):
+        return {
+            'id': self.id,
+            'day': self.day,
+            'shift_start': self.shift_start.strftime('%H:%M') if self.shift_start else None,
+            'shift_end': self.shift_end.strftime('%H:%M') if self.shift_end else None,
+            'shift': self.shift,
+            'staff_id': self.staff_id,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None
+        }
+    
 # =============================================================
 # APPOINTMENTS
 # =============================================================
@@ -189,6 +226,22 @@ class Appointments(db.Model):
     bay = db.relationship('Bays', back_populates='appointments')
     vehicle = db.relationship('Vehicles', back_populates='appointments')
 
+    def to_json(self):
+        return {
+            'id': self.id,
+            'start_time': self.start_time.isoformat() if self.start_time else None,
+            'end_time': self.end_time.isoformat() if self.end_time else None,
+            'bay': self.bay.to_json() if self.bay else None,
+            'customer': self.customer.account.to_json() if self.customer and self.customer.account else None,
+            'vehicle': self.vehicle.to_json() if self.vehicle else None,
+            'service': self.service.to_json() if self.service else None,
+            'status': self.status.to_json() if self.status else None,
+            'staffs': [s.account.to_json() for s in self.staffs],
+            'payments': [p.to_json() for p in self.payments],
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None
+        }
+    
 # =============================================================
 # PAYMENTS
 # =============================================================
@@ -213,6 +266,19 @@ class Payments(db.Model):
     appointment = db.relationship('Appointments', back_populates='payments')
     status = db.relationship('Status', back_populates='payments')
 
+    def to_json(self):
+        return {
+            'id': self.id,
+            'method': self.method,
+            'transaction_no': self.transaction_no,
+            'image_payment': self.image_payment,
+            'amount': float(self.amount),
+            'status': self.status.to_json() if self.status else None,
+            'appointment_id': self.appointment_id,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None
+        }
+    
 # =============================================================
 # SERVICES
 # =============================================================
@@ -232,6 +298,19 @@ class Services(db.Model):
 
     appointments = db.relationship('Appointments', back_populates='service', cascade="all, delete-orphan")
 
+    def to_json(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'description': self.description,
+            'price': float(self.price),
+            'duration': self.duration,
+            'washers_needed': self.washers_needed,
+            'type': self.type,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None
+        }
+    
 # =============================================================
 # VEHICLES
 # =============================================================
@@ -251,6 +330,17 @@ class Vehicles(db.Model):
     owner = db.relationship("Customers", back_populates="vehicles")
     appointments = db.relationship("Appointments", back_populates="vehicle", cascade="all, delete-orphan")
 
+    def to_json(self):
+        return {
+            'id': self.id,
+            'plate_number': self.plate_number,
+            'model': self.model,
+            'type': self.type,
+            'customer_id': self.customer_id,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None
+        }
+    
 # =============================================================
 # BAYS
 # =============================================================
@@ -265,6 +355,14 @@ class Bays(db.Model):
 
     appointments = db.relationship("Appointments", back_populates="bay", cascade="all, delete-orphan")
 
+    def to_json(self):
+        return {
+            'id': self.id,
+            'bay': self.bay,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None
+        }
+    
 # =============================================================
 # ROLES
 # =============================================================
@@ -279,6 +377,14 @@ class Roles(db.Model):
 
     accounts = db.relationship('Accounts', backref='role', lazy='dynamic')
 
+    def to_json(self):
+        return {
+            'id': self.id,
+            'role': self.role,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None
+        }
+    
 # =============================================================
 # STATUS
 # =============================================================
@@ -293,6 +399,14 @@ class Status(db.Model):
     appointments = db.relationship('Appointments', back_populates='status', lazy='dynamic')
     payments = db.relationship('Payments', back_populates='status', lazy='dynamic')
 
+    def to_json(self):
+        return {
+            'id': self.id,
+            'status': self.status,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None
+        }
+    
 # =============================================================
 # NOTIFICATIONS
 # =============================================================
@@ -310,6 +424,17 @@ class Notifications(db.Model):
     account_id = db.Column(db.Integer, db.ForeignKey('accounts.id'), nullable=True)
     account = db.relationship("Accounts", back_populates="notifications")
 
+    def to_json(self):
+        return {
+            'id': self.id,
+            'content': self.content,
+            'notif_type': self.notif_type,
+            'viewed': self.viewed,
+            'account_id': self.account_id,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None
+        }
+    
 # =============================================================
 # FEEDBACKS
 # =============================================================
@@ -329,6 +454,17 @@ class Feedbacks(db.Model):
     customer = db.relationship("Customers", back_populates="feedbacks")
     appointment = db.relationship("Appointments", back_populates="feedbacks")
 
+    def to_json(self):
+        return {
+            'id': self.id,
+            'rating': self.rating,
+            'comment': self.comment,
+            'customer_id': self.customer_id,
+            'appointment_id': self.appointment_id,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None
+        }
+    
 # =============================================================
 # LOYALTIES
 # =============================================================
@@ -345,6 +481,16 @@ class Loyalties(db.Model):
     customer_id = db.Column(db.Integer, db.ForeignKey('customers.id'), nullable=False)
     customer = db.relationship("Customers", back_populates="loyalties")
 
+    def to_json(self):
+        return {
+            'id': self.id,
+            'points': self.points,
+            'note': self.note,
+            'customer_id': self.customer_id,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None
+        }
+    
 # =============================================================
 # LOGIN MANAGER
 # =============================================================

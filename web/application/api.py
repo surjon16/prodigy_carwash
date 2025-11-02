@@ -1022,24 +1022,36 @@ def api_populate():
         current_app.logger.exception("api_populate error")
         return jsonify({'success': False, 'error': str(e)}), 500
 
-@api.route('/quick_book/<int:id>', methods=['GET'])
-def api_quick_book(id):
+@api.route('/quick_book', methods=['POST'])
+def api_quick_book():
+    data = get_request_data()
     try:
+        # Extract data from request
+        vehicle_id = data.get('vehicle_id')
+        service_id = data.get('service_id')
+        customer_id = data.get('customer_id')
+        appointment_date = data.get('appointment_date')
+
         if 'quick_book' in globals() and callable(quick_book):
-            response = quick_book(id)
+            response = quick_book(service_id, customer_id, vehicle_id, appointment_date)
             return jsonify({'success': True, 'message': response})
         return jsonify({'success': False, 'message': 'No quick_book function found'}), 500
     except Exception as e:
-        current_app.logger.exception("api_delete_loyalty error")
+        current_app.logger.exception("api_quick_book error")
         return jsonify({'success': False, 'error': str(e)}), 500
 
-@api.route('/check_or_suggest_appointment/<int:service_id>/<string:appointment_date>', methods=['GET'])
-def api_check_or_suggest_appointment(service_id, appointment_date):
+@api.route('/check_or_suggest_appointment', methods=['POST'])
+def api_check_or_suggest_appointment():
+    data = get_request_data()
     try:
+        # Extract data from request
+        service_id = data.get('service_id')
+        appointment_date = data.get('appointment_date')
+
         if 'check_or_suggest_appointment' in globals() and callable(check_or_suggest_appointment):
             response = check_or_suggest_appointment(service_id, appointment_date)
             return jsonify({'success': True, 'message': response})
         return jsonify({'success': False, 'message': 'No check_or_suggest_appointment function found'}), 500
     except Exception as e:
-        current_app.logger.exception("api_delete_loyalty error")
+        current_app.logger.exception("api_check_or_suggest_appointment error")
         return jsonify({'success': False, 'error': str(e)}), 500

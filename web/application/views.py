@@ -242,9 +242,11 @@ def admin_settings():
 @staff_required
 def staff_home():
     data = {
-        'appointments': Staff.get_staff_appointments(current_user.id),
-        'services': get_services(),
-        'bays': get_bay_appointments_table(),
+        'upcoming': get_upcoming_appointments(),
+        'customers': Customer.get_registered_customers(),
+        'staffs': Staff.get_staffs_on_duty(),
+        'services': [ s.to_json() for s in get_services() ],
+        'bays': Staff.get_bay_appointments(),
     }
     return render_template('staff/home.html', data=data)
 
