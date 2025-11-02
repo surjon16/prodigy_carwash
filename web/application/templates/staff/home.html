@@ -5,88 +5,196 @@
 
 {% block css %}
 <style>
-    .calendar { border: 1px solid #dee2e6; }
-    .calendar .time-col { width: 80px; background: #f8f9fa; text-align: right; padding-right: 5px; }
-    .calendar .day-col { min-width: 150px; border-left: 1px solid #dee2e6; position: relative; }
-    .calendar .time-slot { height: 60px; border-top: 1px solid #dee2e6; position: relative; }
-    .calendar .event {
-        position: absolute;
-        top: 5px; left: 5px; right: 5px;
-        background-color: #0d6efd; color: #fff;
-        border-radius: 4px; padding: 5px;
-        font-size: 0.8rem;
-    }
+.timeline-container {
+    position: relative;
+    overflow-y: auto;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    background: #fff;
+    padding: 0;
+    height: 600px; /* adjust based on your screen */
+    font-family: "Inter", sans-serif;
+}
+
+/* Header for Bays (columns) */
+.timeline-header {
+    display: flex;
+    position: sticky;
+    top: 0;
+    background: #fff;
+    border-bottom: 2px solid #dee2e6;
+    z-index: 5;
+}
+
+.timeline-bay-label {
+    width: 80px;
+    text-align: center;
+    padding: 0.5rem;
+    font-weight: 600;
+    color: #495057;
+    border-left: 1px solid #e9ecef;
+}
+
+/* Body containing hours vertically */
+.timeline-body {
+    position: relative;
+    display: flex;
+}
+
+/* Time labels column */
+.timeline-time {
+    width: 80px;
+    border-right: 2px solid #dee2e6;
+    background: #fff;
+    flex-shrink: 0;
+}
+
+.timeline-hour {
+    height: 60px; /* each hour = 60px */
+    border-bottom: 1px solid #e9ecef;
+    font-size: 0.85rem;
+    text-align: right;
+    padding-right: 6px;
+    color: #6c757d;
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-end;
+}
+
+/* Bay Columns */
+.timeline-column {
+    position: relative;
+    flex: 1;
+    min-width: 150px;
+    border-left: 1px solid #e9ecef;
+    background: repeating-linear-gradient(
+        to bottom,
+        #f8f9fa,
+        #f8f9fa 59px,
+        #e9ecef 60px
+    );
+}
+
+/* Appointment blocks */
+.bay-badge {
+    position: absolute;
+    left: 10px;
+    right: 10px;
+    border-radius: 8px;
+    color: #fff;
+    padding: 6px 10px;
+    font-size: 0.85rem;
+    line-height: 1.3;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.bay-badge.badge-primary {
+    background: linear-gradient(135deg, #007bff, #0056b3);
+}
+
+.bay-badge.badge-danger {
+    background: linear-gradient(135deg, #dc3545, #a71d2a);
+}
+
+/* Current Time Line */
+.current-time-line {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: red;
+    z-index: 10;
+    pointer-events: none;
+    opacity: 0.8;
+}
 </style>
 {% endblock %}
+
 
 {% block modal %}
 <div class="modal fade" id="modal-booking">
     <div class="modal-dialog">
         <div class="modal-content card bg-secondary shadow">
-                <div class="modal-header card-header bg-white border-0">
-                    <h4 class="card-title">Book New Appointment</h4>
-                    <button type="button" class="close" data-dismiss="modal">&times;</button>
-                </div>
-                <div class="modal-body card-body">
-                    <div class="row">
-                        <div class="col-md-12">
-                            <div class="form-group">
-                            <label class="form-control-label">Vehicle Type</label>
-                            <select required id="vehicle_type" name="vehicle_type"
-                                    data-style="bg-white px-4 py-3 shadow-sm" class="form-control selectpicker"
+            <div class="modal-header card-header bg-white border-0">
+                <h4 class="card-title">Book New Appointment</h4>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body card-body">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label class="form-control-label">
+                                Customer
+                            </label>
+                            <select required id="customer_id" name="customer_id" 
+                                    data-style="bg-03 px-4 py-3" class="form-control selectpicker" 
                                     data-live-search="true" data-max-options="1"
-                                    onchange="UpdateServiceOptions(this)">
-                                <option value="" disabled selected>Select an option</option>
-                                {% for i in data.services|map(attribute='type')|unique|list %}
-                                <option value="{{ i }}">{{ i }}</option>
+                                    onchange="UpdateVehicleOptions(this)">
+                                <option value="" disabled selected>Select an existing customer</option>
+                                {% for i in data.customers %}
+                                    <option value="{{i.id}}">{{i.account.full_name}}</option>
                                 {% endfor %}
                             </select>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-12">
-                            <div class="form-group">
-                            <label class="form-control-label">Service</label>
-                            <select required id="service_id" name="service_id"
-                                    data-style="bg-white px-4 py-3 shadow-sm" class="form-control selectpicker"
-                                    data-live-search="true" data-max-options="1" onchange="CheckAppointments()">
-                                <option value="" disabled selected>Select a vehicle type first</option>
-                            </select>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-12">
-                            <div class="form-group">
-                                <label class="form-control-label">
-                                    Customer
-                                </label>
-                                <select required id="customer_id" name="customer_id" 
-                                        data-style="bg-03 px-4 py-3" class="form-control selectpicker" 
-                                        data-live-search="true" data-max-options="1">
-                                    <option value="" disabled selected>Select a vehicle type first</option>
-                                    {% for i in data.customers %}
-                                        <option value="{{i.id}}">{{i.account.full_name}}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-12">
-                            <div class="form-group">
-                                <label for="appointment_date" class="form-control-label">Appointment Date</label>
-                                <input class="form-control form-control-alternative" type="datetime-local" id="appointment_date" onchange="CheckAppointments()">
-                            </div>
-                            <span id="appointment_date_error" class="text-danger"></span>
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button class="btn btn-md btn-danger" data-dismiss="modal">Cancel</button>
-                    <button class="btn btn-md btn-success" onclick="SaveQuickBook()">BOOK NOW</button>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="form-group">
+                        <label class="form-control-label">Vehicle ID</label>
+                        <select required id="vehicle_id" name="vehicle_id"
+                                data-style="bg-white px-4 py-3 shadow-sm" class="form-control selectpicker"
+                                data-live-search="true" data-max-options="1"
+                                onchange="UpdateVehicleTypeOptions(this)">
+                            <option value="" disabled selected>Select a vehicle type first</option>
+                        </select>
+                        </div>
+                    </div>
                 </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="form-group">
+                        <label class="form-control-label">Vehicle Type</label>
+                        <select required id="vehicle_type" name="vehicle_type"
+                                data-style="bg-white px-4 py-3 shadow-sm" class="form-control selectpicker"
+                                data-live-search="true" data-max-options="1"
+                                onchange="UpdateServiceOptions(this)">
+                            <option value="" disabled selected>Select an option</option>
+                            {% for i in data.services|map(attribute='type')|unique|list %}
+                            <option value="{{ i }}">{{ i }}</option>
+                            {% endfor %}
+                        </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="form-group">
+                        <label class="form-control-label">Service</label>
+                        <select required id="service_id" name="service_id"
+                                data-style="bg-white px-4 py-3 shadow-sm" class="form-control selectpicker"
+                                data-live-search="true" data-max-options="1" onchange="CheckAppointments()">
+                            <option value="" disabled selected>Select a vehicle type first</option>
+                        </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label for="appointment_date" class="form-control-label">Appointment Date</label>
+                            <input class="form-control form-control-alternative" type="datetime-local" id="appointment_date" onchange="CheckAppointments()">
+                        </div>
+                        <span id="appointment_date_error" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-md btn-danger" data-dismiss="modal">Cancel</button>
+                <button id="save_quick_book" class="btn btn-md btn-success" onclick="SaveQuickBook()">BOOK NOW</button>
+            </div>
         </div>
     </div>
 </div>
@@ -137,41 +245,52 @@
                             <div class="card-body p-0 min-vh-100">
                                 <div class="tab-content" id="myTabContent">
                                     <div class="tab-pane fade show active" id="tabs-icons-text-1" role="tabpanel" aria-labelledby="tabs-icons-text-1-tab">
-                                        <div class="table-responsive">
-                                            <table class="table align-items-center table-hover table-bordered">
-                                                <thead class="thead-light">
-                                                    <tr>
-                                                        {% for column in data.bays.columns %}
-                                                            <th scope="col">{{column|upper}}</th>
-                                                        {% endfor %}
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    {% for row in data.bays.rows %}
-                                                        <tr >
-                                                            {% for bay in row %}
-                                                                {% if bay != None %}
-                                                                    <td class="p-1">
-                                                                        <span class="badge badge-lg badge-floating {% if bay.status.id == 5 %} badge-danger {% else %} badge-primary {% endif %} border-white">
-                                                                            <p class="m-0">{{bay.start_time.strftime("%a %b %d, %Y")}}</p>
-                                                                            <p class="m-0">{{bay.start_time.strftime("%I:%M%p") }} - {{ bay.end_time.strftime("%I:%M%p")}}</p>
-                                                                            <p class="m-0">{{bay.service.name}}</p>
-                                                                            <p class="m-0">{{bay.status.status}}</p>
-                                                                            <p class="m-0">{% for staff in bay.staffs %}
-                                                                                {{staff.account.full_name}}
-                                                                            {% endfor %}</p>
-                                                                        </span>
-                                                                    </td>
-                                                                {% else %}
-                                                                    <td></td>
-                                                                {% endif %}
-                                                            {% endfor %}
-                                                        </tr>
+                                        <div class="timeline-container" id="timelineContainer">
+                                            
+                                            <!-- BAY HEADER -->
+                                            <div class="timeline-header">
+                                                <div class="timeline-bay-label" style="border-left:none;">Time</div>
+                                                {% for row in data.bays.rows %}
+                                                <div class="timeline-bay-label">Bay {{ loop.index }}</div>
+                                                {% endfor %}
+                                            </div>
+
+                                            <!-- TIMELINE BODY -->
+                                            <div class="timeline-body">
+                                                <!-- Left Time Scale -->
+                                                <div class="timeline-time">
+                                                    {% for h in range(0, 24) %}
+                                                    <div class="timeline-hour">{{ "%02d:00" % h }}</div>
                                                     {% endfor %}
-                                                </tbody>
-                                            </table>
+                                                </div>
+
+                                                <!-- Bay Columns -->
+                                                {% for row in data.bays.rows %}
+                                                <div class="timeline-column">
+                                                    {% for bay in row %}
+                                                    {% if bay %}
+                                                        {% set start = bay.start_time.hour + (bay.start_time.minute / 60) %}
+                                                        {% set end = bay.end_time.hour + (bay.end_time.minute / 60) %}
+                                                        {% set duration = end - start %}
+                                                        {% set top = start * 60 %}   {# 60px per hour #}
+                                                        {% set height = duration * 60 %}
+                                                        <div class="bay-badge {% if bay.status.id == 5 %}badge-danger{% else %}badge-primary{% endif %}"
+                                                            style="top: {{ top }}px; height: {{ height }}px;">
+                                                            <strong>{{ bay.service.name }}</strong><br>
+                                                            {{ bay.start_time.strftime("%I:%M%p") }} - {{ bay.end_time.strftime("%I:%M%p") }}<br>
+                                                            <small>{{ bay.status.status }}</small>
+                                                        </div>
+                                                    {% endif %}
+                                                    {% endfor %}
+                                                </div>
+                                                {% endfor %}
+
+                                                <!-- Current Time Line -->
+                                                <div class="current-time-line" id="currentTimeLine"></div>
+                                            </div>
                                         </div>
                                     </div>
+
                                     <div class="tab-pane fade" id="tabs-icons-text-2" role="tabpanel" aria-labelledby="tabs-icons-text-2-tab">
                                         <div class="table-responsive">
                                             <!-- Projects table -->
@@ -272,130 +391,227 @@
 
 <script>
   const SERVICES = {{ data.services | tojson | safe }};
+  const VEHICLES = {{ data.vehicles | tojson | safe }};
 </script>
 
 <script>
+setSideBar('#menu-home');
+
+const modal = '#modal-booking';
+const bookButton = document.getElementById('save_quick_book');
+
+const formFields = {
+    customer: document.getElementById('customer_id'),
+    vehicle: document.getElementById('vehicle_id'),
+    vehicleType: document.getElementById('vehicle_type'),
+    service: document.getElementById('service_id'),
+    date: document.getElementById('appointment_date')
+};
+
+// ---------------------------
+// UTILITIES
+// ---------------------------
+function updateCurrentTimeLine() {
+    const line = document.getElementById('currentTimeLine');
+    const container = document.getElementById('timelineContainer');
+    if (!line || !container) return;
+
+    const now = new Date();
+    const hours = now.getHours() + now.getMinutes() / 60 + now.getSeconds() / 3600;
+    const topPx = hours * 60; // 1 hour = 60px height
+    line.style.top = `${topPx}px`;
+
+    return topPx;
+}
+
+function scrollToCurrentTime() {
+    const container = document.getElementById('timelineContainer');
+    const topPx = updateCurrentTimeLine();
+    if (!container || topPx === undefined) return;
     
-    setSideBar('#menu-home');
+    container.scrollTo({ top: topPx - 100, behavior: 'smooth' });
 
-    var modal = '#modal-booking';
+    // // Center current time line vertically
+    // const scrollPosition = Math.max(topPx - container.clientHeight / 3, 0);
+    // container.scrollTo({
+    //     top: scrollPosition,
+    //     behavior: 'smooth'
+    // });
+}
 
-    var QuickBook = function() {
-        $(modal).modal({
-            "backdrop": "static",
-            "keyboard": true,
-            "show": true
-        });
+// Initial position & scroll
+window.addEventListener('DOMContentLoaded', () => {
+    scrollToCurrentTime();
+});
 
-        // Reset selects when modal opens
-        document.getElementById("vehicle_type").selectedIndex = 0;
-        document.getElementById("service_id").innerHTML =
-            '<option value="" disabled selected>Select a vehicle type first</option>';
-        $('.selectpicker').selectpicker('refresh');
+// Update every minute to keep the red line accurate
+setInterval(updateCurrentTimeLine, 60000);
+
+function isFormValid() {
+    return (
+        formFields.service.value
+        // formFields.vehicleType.value &&
+        // formFields.service.value &&
+        // formFields.customer.value &&
+        // formFields.date.value
+    );
+}
+
+function toggleBookButton() {
+    bookButton.disabled = !isFormValid();
+}
+
+function showError(id, message) {
+    document.getElementById(id).innerHTML = `<small class="text-danger">${message}</small>`;
+}
+
+function clearError(id) {
+    document.getElementById(id).innerHTML = '';
+}
+
+// ---------------------------
+// MODAL HANDLING
+// ---------------------------
+function QuickBook() {
+    $(modal).modal({
+        backdrop: 'static',
+        keyboard: true,
+        show: true
+    });
+
+    // Reset form
+    formFields.customer.selectedIndex = 0;
+    formFields.vehicle.innerHTML = '<option value="" disabled selected>Select a vehicle</option>';
+    formFields.vehicleType.selectedIndex = 0;
+    formFields.service.innerHTML = '<option value="" disabled selected>Select a vehicle type first</option>';
+    formFields.date.value = '';
+    $('.selectpicker').selectpicker('refresh');
+
+    bookButton.disabled = true;
+}
+
+// ---------------------------
+// FORM LOGIC
+// ---------------------------
+
+function UpdateVehicleOptions(element) {
+    const selectedCustomerId = parseInt(element.value);
+    const vehicleDropdown = formFields.vehicle;
+    vehicleDropdown.innerHTML = '<option value="" disabled selected>Select a vehicle</option>';
+
+    // Filter vehicles owned by selected customer
+    const filteredVehicles = VEHICLES.filter(v => v.customer_id === selectedCustomerId);
+    filteredVehicles.forEach(v => {
+        const option = document.createElement('option');
+        option.value = v.id;
+        option.textContent = `${v.model} (${v.plate_number || 'No Plate'})`;
+        option.dataset.type = v.type; // store type for auto-selection later
+        vehicleDropdown.appendChild(option);
+    });
+
+    $('.selectpicker').selectpicker('refresh');
+    toggleBookButton();
+}
+
+function UpdateVehicleTypeOptions(element) {
+    const selectedVehicleId = parseInt(element.value);
+    const selectedVehicle = VEHICLES.find(v => v.id === selectedVehicleId);
+    if (!selectedVehicle) return;
+
+    // Smart vehicle type mapping
+    formFields.vehicleType.value = selectedVehicle.type.includes("Bike")
+        ? "Motorcycle"
+        : selectedVehicle.type;
+
+    $('.selectpicker').selectpicker('refresh');
+    UpdateServiceOptions(formFields.vehicleType); // auto-update service list
+    toggleBookButton();
+}
+
+function UpdateServiceOptions(element) {
+    const selectedType = element.value;
+    const serviceDropdown = formFields.service;
+    serviceDropdown.innerHTML = '<option value="" disabled selected>Select a service</option>';
+
+    const filteredServices = SERVICES.filter(s => s.type === selectedType);
+    filteredServices.forEach(s => {
+        const option = document.createElement('option');
+        option.value = s.id;
+        option.textContent = `${s.name} - ₱${s.price} - ETA ${s.duration} mins`;
+        serviceDropdown.appendChild(option);
+    });
+
+    $('.selectpicker').selectpicker('refresh');
+    toggleBookButton();
+}
+
+function CheckAppointments() {
+    clearError('appointment_date_error');
+
+    const data = {
+        appointment_date: formFields.date.value,
+        service_id: formFields.service.value
+    };
+
+    if (!data.appointment_date || !data.service_id) {
+        toggleBookButton();
+        return;
     }
 
+    Controller.POST('/api/check_or_suggest_appointment', data).done(function(result) {
+        const res = result.message;
 
-    var UpdateServiceOptions = function(element) {
-        const selectedType = element.value;
-        const serviceDropdown = document.getElementById("service_id");
-
-        // Clear previous options
-        serviceDropdown.innerHTML = '<option value="" disabled selected>Select a service</option>';
-
-        // Filter services by type
-        const filtered = SERVICES.filter(s => s.type === selectedType);
-
-        // Add new options dynamically
-        filtered.forEach(s => {
-            const option = document.createElement("option");
-            option.value = s.id;
-            option.textContent = `${s.name} - ₱${s.price} - ETA ${s.duration} mins`;
-            serviceDropdown.appendChild(option);
-        });
-
-        // Refresh the selectpicker (if you’re using Bootstrap Select)
-        $('.selectpicker').selectpicker('refresh');
-    }
-
-    var SaveQuickBook = function() {
-
-        // Clear previous errors
-        $('#vehicle_type_error').html('')
-        $('#service_id_error').html('')
-        $('#customer_id_error').html('')
-        $('#appointment_date_error').html('')
-
-        // Gather form data
-        data = {
-            'vehicle_type'      : $('#vehicle_type').val(),
-            'service_id'        : $('#service_id').val(),
-            'customer_id'       : $('#customer_id').val(),
-            'appointment_date'  : $('#appointment_date').val(),
+        if (res.available) {
+            showError('appointment_date_error', '<span class="text-success">Slot available ✅</span>');
+        } else {
+            let msg = `<strong>${res.message}</strong>`;
+            if (res.suggestions && res.suggestions.length > 0) {
+                msg += '<br><br>Suggested Slots:<br>';
+                res.suggestions.forEach(s => {
+                    msg += `<div class="text-info">${s.schedule}</div>`;
+                });
+            }
+            showError('appointment_date_error', msg);
         }
+    });
 
-        // Call your Flask API
-        Controller.POST('/api/quick_book', data).done(function(result) {
+    toggleBookButton();
+}
 
-            console.log(data, result)
-
-            if (result.success == true) {
-                // Success handler
-                $('#appointmentModal').modal('hide')
-                location.reload()
-            }
-            else {
-                // Handle validation errors
-                if(result.errors.vehicle_type) $('#vehicle_type_error').html(result.errors.vehicle_type)
-                if(result.errors.service_id) $('#service_id_error').html(result.errors.service_id)
-                if(result.errors.customer_id) $('#customer_id_error').html(result.errors.customer_id)
-                if(result.errors.appointment_date) $('#appointment_date_error').html(result.errors.appointment_date)
-            }
-        })
+function SaveQuickBook() {
+    if (!isFormValid()) {
+        alert('Please fill in all required fields.');
+        return;
     }
 
-    var CheckAppointments = function() {
+    const data = {
+        vehicle_type: formFields.vehicleType.value,
+        vehicle_id: formFields.vehicle.value,
+        service_id: formFields.service.value,
+        customer_id: formFields.customer.value,
+        appointment_date: formFields.date.value
+    };
 
-        // Clear any previous messages
-        $('#appointment_date_error').html('');
-        $('#appointment_date_success').html('');
-
-        // Optional: show loading feedback
-        // $('#appointment_date_error').html('<small class="text-muted">Checking availability...</small>');
-        
-        data = {
-            'appointment_date'  :$('#appointment_date').val(),
-            'service_id'        : $('#service_id').val(),
+    Controller.POST('/api/quick_book', data).done(function(result) {
+        if (result.success) {
+            $(modal).modal('hide');
+            location.reload();
+        } else if (result.errors) {
+            if (result.errors.vehicle_type) showError('vehicle_type_error', result.errors.vehicle_type);
+            if (result.errors.service_id) showError('service_id_error', result.errors.service_id);
+            if (result.errors.customer_id) showError('customer_id_error', result.errors.customer_id);
+            if (result.errors.appointment_date) showError('appointment_date_error', result.errors.appointment_date);
         }
+    });
+}
 
-        if (!data['appointment_date'] || !data['service_id']) {
-            return; // don't check yet if form is incomplete
-        }
-
-        // Call your Flask API
-        Controller.POST('/api/check_or_suggest_appointment', data).done(function(result) {
-            result = result.message;
-            console.log(result)
-            if (result.available) {
-                // Slot is available
-                $('#appointment_date_error').html('');
-                $('#appointment_date_error').html('<h4 class="text-success">Slot available ✅</h4>');
-            }
-            else {
-                // Slot not available, show message
-                let message = result.message;
-                if (result.suggestions && result.suggestions.length > 0) {
-                    message += '<br>Suggested Slots:<br>';
-                    result.suggestions.forEach(function(suggestion) {
-                        message += `<h4 class="text-info">${suggestion.schedule}</h4><br>`;
-                    });
-                }
-                $('#appointment_date_error').html(`<h4 class="text-danger">${message}</h4>`);
-            }
-        })
-
-    }
-
-
+// ---------------------------
+// REAL-TIME VALIDATION EVENTS
+// ---------------------------
+Object.values(formFields).forEach(field => {
+    field.addEventListener('change', toggleBookButton);
+    field.addEventListener('input', toggleBookButton);
+});
 
 </script>
 

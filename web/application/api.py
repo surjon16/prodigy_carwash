@@ -3,10 +3,8 @@ from flask import Blueprint, current_app, jsonify, request
 from datetime import datetime, date
 from typing import Any, Dict, List, Optional
 
-# Import CRUD functions from your crud.py
-# This file assumes crud.py exposes functions like:
-# get_account, get_accounts, create_account, upsert_account, delete_account, ...
 from data.repo import *
+from data.seed.populate import Populate
 
 api = Blueprint('api', __name__, url_prefix='/api')
 
@@ -1014,10 +1012,8 @@ def api_delete_loyalty():
 def api_populate():
     try:
         # If you implemented a populate_seed_data() or populate() in crud.py, call it
-        if 'populate' in globals() and callable(populate):
-            populate()
-            return jsonify({'success': True, 'message': 'Populated'})
-        return jsonify({'success': False, 'message': 'No populate function found'}), 500
+        Populate.populate()
+        return jsonify({'success': True, 'message': 'Populated'})
     except Exception as e:
         current_app.logger.exception("api_populate error")
         return jsonify({'success': False, 'error': str(e)}), 500

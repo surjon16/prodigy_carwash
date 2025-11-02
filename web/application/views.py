@@ -10,6 +10,8 @@ from functools import wraps
 
 from application import app
 from data.repo import *
+from data.services.staff import Staff
+from data.services.customer import Customer
 
 # ===============================================================
 # HELPERS
@@ -245,7 +247,8 @@ def staff_home():
         'upcoming': get_upcoming_appointments(),
         'customers': Customer.get_registered_customers(),
         'staffs': Staff.get_staffs_on_duty(),
-        'services': [ s.to_json() for s in get_services() ],
+        'services': [ data.to_json() for data in get_services() ],
+        'vehicles': [ data.to_json() for data in get_vehicles() ],
         'bays': Staff.get_bay_appointments(),
     }
     return render_template('staff/home.html', data=data)
