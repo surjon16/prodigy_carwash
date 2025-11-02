@@ -245,7 +245,7 @@ def admin_settings():
 def staff_home():
     data = {
         'upcoming': get_upcoming_appointments(),
-        'customers': Customer.get_registered_customers(),
+        'customers': get_customers(),
         'staffs': Staff.get_staffs_on_duty(),
         'services': [ data.to_json() for data in get_services() ],
         'vehicles': [ data.to_json() for data in get_vehicles() ],
