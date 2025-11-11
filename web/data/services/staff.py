@@ -8,11 +8,15 @@ from data.models import  (
     Schedules
 )
 
-
 class Staff:
 
+    def get_staff_by_account_id(account_id: int) -> Optional[Staffs]:
+        """Return a single staff or None."""
+        return Staffs.query.filter_by(account_id=account_id).first()
+
+
     def get_staff_appointments(staff_id: int) -> Optional[Appointments]:
-        """Return a single account or None."""
+        """Return staff appointments or None."""
         return Staffs.query.filter_by(id=staff_id).first().appointments
     
     
@@ -159,3 +163,48 @@ class Staff:
             "columns": bay_names,  # Bay headers
             "rows": table_rows     # Chronological rows
         }
+
+
+    def mark_staff_on_shift(staff_id: int, on_shift: bool) -> None:
+        """Mark a staff member as on shift or off shift."""
+        staff = Staffs.query.filter_by(id=staff_id).first()
+        if staff:
+            staff.is_on_shift = on_shift
+            db.session.commit()
+
+    def mark_all_staff_off_shift() -> None:
+        """Mark all staff members as off shift."""
+        staffs = Staffs.query.all()
+        for staff in staffs:
+            staff.is_on_shift = False
+        db.session.commit()
+
+    def mark_all_washers_off_shift() -> None:
+        """Mark all washer staff members as off shift."""
+        washers = Staffs.query.filter_by(is_front_desk=False).all()
+        for washer in washers:
+            washer.is_on_shift = False
+        db.session.commit()
+
+    def mark_all_front_desk_off_shift() -> None:
+        """Mark all front desk staff members as off shift."""
+        front_desk_staff = Staffs.query.filter_by(is_front_desk=True).all()
+        for staff in front_desk_staff:
+            staff.is_on_shift = False
+        db.session.commit()
+
+    def set_staff_schedule(staff_id: int, day: str, shift_start: datetime.time, shift_end: datetime.time) -> None:
+        """Set or update a washer's schedule for a specific day."""
+        schedule = Schedules.query.filter_by(staff_id=staff_id, day=day).first()
+        if schedule:
+            schedule.shift_start = shift_start
+            schedule.shift_end = shift_end
+        else:
+            new_schedule = Schedules(
+                staff_id=staff_id,
+                day=day,
+                shift_start=shift_start,
+                shift_end=shift_end
+            )
+            db.session.add(new_schedule)
+        db.session.commit()

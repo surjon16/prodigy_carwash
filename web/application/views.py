@@ -261,6 +261,12 @@ def staff_appointments():
     data = get_staff_appointments(current_user.id)
     return render_template('staff/appointments.html', appointments=data)
 
+@app.route('/staff/account/<int:id>', endpoint='staff_account_details')
+@login_required
+@staff_required
+def staff_account_details(id):
+    account = get_account(id)
+    return render_template('staff/account_detail.html', account=account)
 
 @app.route('/staff/feedbacks', endpoint='staff_feedbacks')
 @login_required

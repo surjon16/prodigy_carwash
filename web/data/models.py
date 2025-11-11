@@ -421,8 +421,11 @@ class Notifications(db.Model):
     created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
     updated_at = db.Column(db.DateTime, default=db.func.current_timestamp(), onupdate=db.func.current_timestamp())
 
-    account_id = db.Column(db.Integer, db.ForeignKey('accounts.id'), nullable=True)
-    account = db.relationship("Accounts", back_populates="notifications")
+    recipient_id = db.Column(db.Integer, db.ForeignKey('accounts.id'), nullable=True)
+    account = db.relationship("Accounts", back_populates="notifications", foreign_keys=[recipient_id])
+
+    sender_id = db.Column(db.Integer, db.ForeignKey('accounts.id'), nullable=True)
+    sender = db.relationship("Accounts", back_populates="notifications", foreign_keys=[sender_id])
 
     def to_json(self):
         return {
@@ -430,7 +433,10 @@ class Notifications(db.Model):
             'content': self.content,
             'notif_type': self.notif_type,
             'viewed': self.viewed,
-            'account_id': self.account_id,
+            'recipient_id': self.recipient_id,
+            'recipient': self.account.to_json() if self.account else None,
+            'sender_id': self.sender_id,
+            'sender': self.sender.to_json() if self.sender else None,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None
         }

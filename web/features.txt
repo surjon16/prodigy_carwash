@@ -72,6 +72,8 @@ FOR DEVELOPMENT:
     - adjust the start_time of the next appointment (priority based) if customers are not yet in the shop, notify them
     - if no next appointments were adjusted, open the slot for new bookings.
 
+- Add a column to record who booked the appointment is walk-in.
+
 FOR CUSTOMERS:
 Customer Dashboard must show on going appointments with a progress bar or a countdown timer or any animations
 Customer can click "Quick Book" and then book the usual service on the same day.

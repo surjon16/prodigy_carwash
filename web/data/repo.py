@@ -333,7 +333,7 @@ def upsert_staff(request: Dict[str, Any]) -> Optional[Staffs]:
         if staff_id:
             staff = Staffs.query.filter_by(id=staff_id).first()
             if not staff:
-                return None
+                raise ValueError("Staff doesn't exist")
             staff.is_front_desk = request.get('is_front_desk', staff.is_front_desk)
             staff.is_on_shift = request.get('is_on_shift', staff.is_on_shift)
             if request.get('account_id'):
@@ -458,7 +458,6 @@ def delete_schedule(request: Dict[str, Any]) -> bool:
 
 def get_appointments() -> List[Appointments]:
     return Appointments.query.all()
-
 
 def get_appointment(appointment_id: int) -> Optional[Appointments]:
     return Appointments.query.filter_by(id=appointment_id).first()
