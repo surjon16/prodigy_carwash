@@ -89,9 +89,9 @@ def customer_required(f):
 @login_required
 def home():
     if current_user.role_id == 1:
-        return redirect(url_for('admin_home'))
+        return redirect(url_for('admin_dashboard'))
     elif current_user.role_id == 2:
-        return redirect(url_for('staff_home'))
+        return redirect(url_for('staff_appointments'))
     else:
         return redirect(url_for('customer_home'))
 
@@ -133,16 +133,31 @@ def register():
 # ADMIN VIEWS
 # ===============================================================
 
-@app.route('/admin/home', endpoint='admin_home')
+@app.route('/admin/dashboard', endpoint='admin_dashboard')
 @login_required
 @admin_required
-def admin_home():
+def admin_dashboard():
+
+    # Total Appointments Today / This Week
+    # Total Revenue Today / This Month
+    # Active Customers
+    # Available Bays
+    # On-duty Staff / Staff on Shift
+    # Average Rating (from Feedbacks)
+
     data = {
-        'current': get_current_appointments(),
-        'requests': get_appointment_requests(),
-        'upcoming': get_upcoming_appointments(),
+        'total_appointments_today':     get_current_appointments(),
+        'total_appointments_this_week': get_current_week_appointments(),
+        'total_revenue_today':          get_total_revenue_today(),
+        'total_revenue_this_month':     get_total_revenue_this_month(),
+        'registered_customers':         get_registered_customers(),
+        'active_customers':             get_most_active_customers(),
+        'available_bays':               get_available_bays(),
+        'on_duty_staff':                Staff.get_staffs_on_duty(),
+        'average_rating':               get_average_feedback_rating(),
+        'upcoming':                     get_upcoming_appointments(),
     }
-    return render_template('admin/home.html', data=data)
+    return render_template('admin/dashboard.html', data=data)
 
 
 @app.route('/admin/customers', endpoint='admin_customers')
@@ -230,7 +245,7 @@ def admin_settings():
         'services': get_services(),
         'roles': get_roles(),
         'bays': get_bays(),
-        'status': get_statuses()
+        'status': get_statuses(),
     }
     return render_template('admin/settings.html', data=data)
 
@@ -239,10 +254,10 @@ def admin_settings():
 # STAFF VIEWS
 # ===============================================================
 
-@app.route('/staff/home', endpoint='staff_home')
+@app.route('/staff/appointments', endpoint='staff_appointments')
 @login_required
 @staff_required
-def staff_home():
+def staff_appointments():
     data = {
         'upcoming': get_upcoming_appointments(),
         'customers': get_customers(),
@@ -250,16 +265,22 @@ def staff_home():
         'services': [ data.to_json() for data in get_services() ],
         'vehicles': [ data.to_json() for data in get_vehicles() ],
         'bays': Staff.get_bay_appointments(),
+        'status': get_status_for_appointments()
     }
-    return render_template('staff/home.html', data=data)
+    return render_template('staff/appointments.html', data=data)
 
 
-@app.route('/staff/appointments', endpoint='staff_appointments')
+@app.route('/staff/staffs', endpoint='staff_staffs')
 @login_required
 @staff_required
-def staff_appointments():
-    data = get_staff_appointments(current_user.id)
-    return render_template('staff/appointments.html', appointments=data)
+def staff_staffs():
+    data = {
+        'on_duty': Staff.get_staffs_on_duty(),
+        'days': [ 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday' ],
+        'staffs': get_staffs(),
+        'schedules': Staff.get_staff_schedule_matrix(),
+    }
+    return render_template('staff/staffs.html', data=data)
 
 @app.route('/staff/account/<int:id>', endpoint='staff_account_details')
 @login_required

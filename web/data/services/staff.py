@@ -13,7 +13,13 @@ class Staff:
     def get_staff_by_account_id(account_id: int) -> Optional[Staffs]:
         """Return a single staff or None."""
         return Staffs.query.filter_by(account_id=account_id).first()
+    
 
+    def get_all_staff_schedules() -> list:
+        """Return all staff schedules."""
+
+        schedules = Schedules.query.order_by(Schedules.day.asc(), Schedules.shift_start.asc()).all()
+        return schedules
 
     def get_staff_appointments(staff_id: int) -> Optional[Appointments]:
         """Return staff appointments or None."""
@@ -58,6 +64,37 @@ class Staff:
         ]
 
         return staffs_on_duty
+    
+    def get_staff_schedule_matrix():
+        """
+        Returns a list of staff schedules in a tabular format:
+        [
+            {
+                'staff_name': 'John Doe',
+                'Monday': '08:00 AM - 05:00 PM',
+                'Tuesday': '08:00 AM - 05:00 PM',
+                ...
+            },
+            ...
+        ]
+        """
+        days_of_week = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+        table = []
+
+        staffs = Staffs.query.all()  # fetch all staff
+
+        for staff in staffs:
+            row = {
+                'staff_id': staff.id,
+                'staff_name': staff.account.full_name
+            }
+            for day in days_of_week:
+                schedule = next((s for s in staff.schedules if s.day.lower() == day.lower()), None)
+                row[day] = schedule.shift if schedule else None
+            table.append(row)
+
+        return table
+
     
     def get_staff_bay_appointments(staff_id: int) -> dict:
         """

@@ -1,10 +1,10 @@
-import logging
-
+import logging, jwt
+from flask_login import login_user
 from datetime import datetime, date, timedelta, time
 from typing import Optional, List, Union, Dict, Any
 from sqlalchemy import and_, or_, cast, Date
-from flask_login import login_user
 
+from data import app
 from data import db  # your SQLAlchemy instance
 from data.models import (
     Accounts, Customers, Staffs, Appointments, Payments, Services,
@@ -16,7 +16,6 @@ from data.utils import *
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
-
 
 # =============================================================
 # HELPERS
@@ -41,7 +40,6 @@ def _parse_date_mmddyyyy(s: Optional[str]) -> Optional[datetime]:
             continue
     return None
 
-
 def _parse_datetime_iso_or_custom(s: Optional[str]) -> Optional[datetime]:
     if not s:
         return None
@@ -54,10 +52,39 @@ def _parse_datetime_iso_or_custom(s: Optional[str]) -> Optional[datetime]:
         except Exception:
             return None
 
+def generate_token(account_id):
+    payload = {
+        "account_id": account_id,
+        "exp": datetime.utcnow() + timedelta(hours=12)
+    }
+    return jwt.encode(payload, app.secret_key, algorithm="HS256")
 
+def decode_token(token):
+    try:
+        payload = jwt.decode(token, app.secret_key, algorithms=["HS256"])
+        return Accounts.query.get(payload["account_id"])
+    except jwt.ExpiredSignatureError:
+        return None
+    except jwt.InvalidTokenError:
+        return None
+    
 # ==================================================================================
 # ACCOUNTS
 # ==================================================================================
+
+def authenticate_account(email: str, password: str) -> Optional[Accounts]:
+    """
+    Authenticate an account by email and password.
+    Returns Accounts on success, None on failure.
+    """
+    try:
+        account = Accounts.query.filter_by(email=email).first()
+        if account and account.verify_password(password):
+            return account
+        return None
+    except Exception as e:
+        logger.exception("authenticate_account error")
+        return None
 
 def login_account(request: Dict[str, Any]) -> Optional[Accounts]:
     """
@@ -70,16 +97,23 @@ def login_account(request: Dict[str, Any]) -> Optional[Accounts]:
         account = Accounts.query.filter_by(email=email).first()
         if account and account.verify_password(pw):
             login_user(account)
+            token = generate_token(account.id)
+            account.token = token
+            db.session.commit()
             return account
         return None
     except Exception as e:
         logger.exception("login_account error")
         return None
 
-
 def get_accounts() -> List[Accounts]:
     """Return all accounts."""
     return Accounts.query.all()
+
+
+def get_account_token(token: str) -> Optional[Accounts]:
+    """Return account associated with the provided token."""
+    return decode_token(token)
 
 
 def get_account(account_id: int) -> Optional[Accounts]:
@@ -93,6 +127,7 @@ def register_account(request: Dict[str, Any]) -> Optional[Accounts]:
     Returns the created Accounts instance or False on failure.
     """
     try:
+
         birth_date = _parse_date_mmddyyyy(request.get('birth_date'))
         account = Accounts(
             first_name=request.get('first_name'),
@@ -124,10 +159,10 @@ def upsert_account(request: Dict[str, Any]) -> Optional[Accounts]:
     Returns Accounts instance or False on failure.
     """
     try:
-        account_id = request.get('id')
+        account_id = int(request.get('id'))
         birth_date = _parse_date_mmddyyyy(request.get('birth_date'))
 
-        if account_id:
+        if account_id > 0:
             account = Accounts.query.filter_by(id=account_id).first()
             if not account:
                 logger.debug("upsert_account: id provided but account not found: %s", account_id)
@@ -186,6 +221,27 @@ def delete_account(request: Dict[str, Any]) -> bool:
 def get_customers() -> List[Customers]:
     return Customers.query.all()
 
+def get_most_active_customers(limit: int = 5) -> List[Customers]:
+    """Return customers with the most completed appointments."""
+    subquery = (
+        db.session.query(
+            Appointments.customer_id,
+            db.func.count(Appointments.id).label('appt_count')
+        )
+        .filter(Appointments.status_id == 3)  # Completed status
+        .group_by(Appointments.customer_id)
+        .subquery()
+    )
+
+    results = (
+        db.session.query(Customers)
+        .join(subquery, Customers.id == subquery.c.customer_id)
+        .order_by(subquery.c.appt_count.desc())
+        .limit(limit)
+        .all()
+    )
+    return results
+
 
 def get_customer(customer_id: int) -> Optional[Customers]:
     return Customers.query.filter_by(id=customer_id).first()
@@ -202,11 +258,13 @@ def create_customer(request: Dict[str, Any]) -> Optional[Customers]:
     Returns the created Customer instance or False on failure.
     """
     try:
-        account_id = request.get('account_id')
-        if not account_id and request.get('account'):
-            acct = register_account(request.get('account'))
+        account_id = int(request.get('id'))
+        if account_id == -1 or (not account_id and request.get('account')):
+            acct = register_account(request)
             if not acct:
                 raise ValueError("Failed to create linked account")
+            else:
+                logger.debug("Created linked account id=%s for customer", acct.id)
             account_id = acct.id
 
         customer = Customers(
@@ -232,19 +290,14 @@ def upsert_customer(request: Dict[str, Any]) -> Optional[Customers]:
     Returns the Customer instance or False on failure.
     """
     try:
-        cust_id = request.get('id')
-        if request.get('account'):
-            acct_req = request.get('account')
-            acct = upsert_account(acct_req)
-            if acct in (False, None):
-                raise ValueError("Failed to create/update linked account")
-            request['account_id'] = acct.id
-
-        if cust_id:
+        cust_id = int(request.get('id'))
+        if cust_id > 0:
             cust = Customers.query.filter_by(id=cust_id).first()
             if not cust:
                 logger.debug("upsert_customer: not found id=%s", cust_id)
                 return None
+            request['id'] = cust.account_id
+            upsert_account(request)
             cust.is_registered = request.get('is_registered', cust.is_registered)
             cust.is_pwd = request.get('is_pwd', cust.is_pwd)
             cust.is_senior = request.get('is_senior', cust.is_senior)
@@ -269,7 +322,7 @@ def delete_customer(request: Dict[str, Any]) -> bool:
         if not cust:
             logger.debug("delete_customer: not found id=%s", request.get('id'))
             return False
-        db.session.delete(cust)
+        db.session.delete(cust.account) # cascade delete customer
         db.session.commit()
         logger.debug("Deleted customer id=%s", request.get('id'))
         return True
@@ -323,17 +376,13 @@ def upsert_staff(request: Dict[str, Any]) -> Optional[Staffs]:
     Upsert staff and optionally create/update linked account.
     """
     try:
-        staff_id = request.get('id')
-        if request.get('account'):
-            acct = upsert_account(request.get('account'))
-            if acct in (False, None):
-                raise ValueError("Failed to create/update linked account")
-            request['account_id'] = acct.id
-
-        if staff_id:
+        staff_id = int(request.get('id'))
+        if staff_id > 0:
             staff = Staffs.query.filter_by(id=staff_id).first()
             if not staff:
                 raise ValueError("Staff doesn't exist")
+            request['id'] = staff.account_id
+            upsert_account(request)
             staff.is_front_desk = request.get('is_front_desk', staff.is_front_desk)
             staff.is_on_shift = request.get('is_on_shift', staff.is_on_shift)
             if request.get('account_id'):
@@ -356,7 +405,7 @@ def delete_staff(request: Dict[str, Any]) -> bool:
             logger.debug("delete_staff: not found id=%s", request.get('id'))
             return False
         # Many-to-many links are removed when staff is deleted by SQLAlchemy
-        db.session.delete(staff)
+        db.session.delete(staff.account)  # cascade delete staff
         db.session.commit()
         logger.debug("Deleted staff id=%s", request.get('id'))
         return True
@@ -372,7 +421,7 @@ def delete_staff(request: Dict[str, Any]) -> bool:
 
 def get_schedules() -> List[Schedules]:
     """Return all staff schedules"""
-    return Schedules.query.all()
+    return Schedules.query.order_by(Schedules.shift_start).all()
 
 
 def get_schedule(schedule_id: int) -> Optional[Schedules]:
@@ -396,15 +445,15 @@ def upsert_schedule(request: Dict[str, Any]) -> Union[Schedules, bool, None]:
     - id (optional, if updating)
     """
     try:
-        sched_id = request.get('id')
-        staff_id = request.get('staff_id')
+        sched_id = int(request.get('id'))
+        staff_id = int(request.get('staff_id'))
 
         # parse time strings
         shift_start = _parse_time(request.get('shift_start')) or time(8, 0)
         shift_end = _parse_time(request.get('shift_end')) or time(17, 0)
         day = request.get('day')
 
-        if sched_id:
+        if sched_id > 0:
             sched = Schedules.query.filter_by(id=sched_id).first()
             if not sched:
                 return None
@@ -416,11 +465,6 @@ def upsert_schedule(request: Dict[str, Any]) -> Union[Schedules, bool, None]:
             logger.debug("Updated schedule id=%s", sched.id)
             return sched
         else:
-            # Ensure one schedule per staff (unique constraint)
-            existing = Schedules.query.filter_by(staff_id=staff_id).first()
-            if existing:
-                return None
-
             sched = Schedules(
                 staff_id=staff_id,
                 shift_start=shift_start,
@@ -464,6 +508,20 @@ def get_appointment(appointment_id: int) -> Optional[Appointments]:
 
 def get_current_appointments() -> List[Appointments]:
     return Appointments.query.filter(cast(Appointments.start_time, Date) == date.today(), Appointments.status_id > 1).order_by(Appointments.start_time, Appointments.status_id).all()
+
+def get_current_week_appointments() -> List[Appointments]: 
+    today = date.today()
+    start_of_week = today - timedelta(days=today.weekday())  # Monday
+    end_of_week = start_of_week + timedelta(days=6)          # Sunday
+    return (Appointments.query
+            .filter(
+                cast(Appointments.start_time, Date) >= start_of_week,
+                cast(Appointments.start_time, Date) <= end_of_week,
+                Appointments.status_id > 1
+            )
+            .order_by(Appointments.start_time, Appointments.status_id)
+            .all())
+
 
 def get_appointment_requests() -> List[Appointments]:
     return Appointments.query.filter(Appointments.status_id == 1).order_by(Appointments.start_time).all()
@@ -558,42 +616,73 @@ def book_appointment(request: Dict[str, Any]) -> Union[Appointments, str, bool]:
         return False
 
 
+
+def format_date(appointment_date):
+    now = datetime.today()
+    if appointment_date:
+        appointment_date = datetime.fromisoformat(appointment_date)
+        if isinstance(appointment_date, str):
+            now = datetime.strptime(appointment_date, "%Y-%m-%d %H:%M")
+        else:
+            now = appointment_date
+    now = now.replace(second=0, microsecond=0) # truncate seconds
+    return now
+
 def upsert_appointment(request: Dict[str, Any]) -> Union[Appointments, bool, None]:
     """
     Create or update an appointment. Returns the appointment instance or False/None on failure/not found.
     """
     try:
-        appt_id = request.get('id')
-        start = _parse_datetime_iso_or_custom(request.get('start_time')) if request.get('start_time') else None
-        end = _parse_datetime_iso_or_custom(request.get('end_time')) if request.get('end_time') else None
 
-        if appt_id:
-            appt = Appointments.query.filter_by(id=appt_id).first()
-            if not appt:
-                logger.debug("upsert_appointment: not found id=%s", appt_id)
+        appointment_id      = int(request.get('id'))
+        service_id          = request.get('service_id')
+        customer_id         = request.get('customer_id')
+        vehicle_id          = request.get('vehicle_id')
+        status_id           = request.get('status_id')
+        appointment_date    = request.get('appointment_date')
+        
+        if appointment_id > 0:
+            appointment = Appointments.query.filter_by(id=appointment_id).first()
+            if not appointment:
+                logger.debug("upsert_appointment: not found id=%s", appointment_id)
                 return None
-            appt.start_time = start or appt.start_time
-            appt.end_time = end or appt.end_time
-            appt.customer_id = request.get('customer_id', appt.customer_id)
-            appt.vehicle_id = request.get('vehicle_id', appt.vehicle_id)
-            appt.service_id = request.get('service_id', appt.service_id)
-            appt.bay_id = request.get('bay_id', appt.bay_id)
-            appt.status_id = request.get('status_id', appt.status_id)
 
-            if 'staffs_ids' in request:
-                appt.staffs = []
-                staff_ids = request.get('staffs_ids')
-                if isinstance(staff_ids, int):
-                    staff_ids = [staff_ids]
-                staffs_objs = Staffs.query.filter(Staffs.id.in_(staff_ids)).all()
-                for s in staffs_objs:
-                    appt.staffs.append(s)
+            if format_date(appointment_date) != appointment.start_time or service_id != appointment.service_id:
+                
+                # Service lookup
+                service = Services.query.get(service_id)
+                if not service:
+                    raise ValueError("Invalid service ID")
+
+                duration = timedelta(minutes=service.duration)
+                washers_needed = service.washers_needed
+
+                appointment.status_id = 5
+                db.session.flush()
+
+                # Get available slot
+                slot = get_available_bay_and_staff(format_date(appointment_date), duration, washers_needed)
+                if not slot:
+                    raise ValueError("No available bay or staff found.")
+                
+                # NEEDS AD HOC TEST
+                appointment.start_time  = slot["start_time"]
+                appointment.end_time    = slot["end_time"]
+                appointment.bay_id      = slot["bay"].id
+                appointment.staffs      = slot["staff"]
+                status_id               = 2
+
+            appointment.customer_id = customer_id or appointment.customer_id
+            appointment.vehicle_id  = vehicle_id or appointment.vehicle_id
+            appointment.service_id  = service_id or appointment.service_id
+            appointment.status_id   = status_id or appointment.status_id
+
             db.session.commit()
-            logger.debug("Updated appointment id=%s", appt.id)
-            return appt
+            logger.debug("Updated appointment id=%s", appointment.id)
+            return appointment
         else:
             # create new
-            return book_appointment(request)
+            return quick_book(service_id, customer_id, vehicle_id, appointment_date)
     except Exception as e:
         db.session.rollback()
         logger.exception("upsert_appointment failed")
@@ -637,6 +726,41 @@ def get_payments() -> List[Payments]:
     return Payments.query.all()
 
 
+def get_total_revenue_today() -> float:
+    today = date.today()
+    payments = (Payments.query
+                .filter(
+                    cast(Payments.created_at, Date) == today,
+                    Payments.status_id == 9
+                )
+                .order_by(Payments.created_at)
+                .all())
+    
+    return sum(p.amount for p in payments if p.amount) if payments else 0.0
+
+
+def get_total_revenue_this_month() -> float:
+    today = date.today()
+    start_of_month = date(today.year, today.month, 1)
+    
+    # To get the last day of the current month:
+    if today.month == 12:
+        end_of_month = date(today.year + 1, 1, 1) - timedelta(days=1)
+    else:
+        end_of_month = date(today.year, today.month + 1, 1) - timedelta(days=1)
+
+    payments = (Payments.query
+                .filter(
+                    cast(Payments.created_at, Date) >= start_of_month,
+                    cast(Payments.created_at, Date) <= end_of_month,
+                    Payments.status_id == 9
+                )
+                .order_by(Payments.created_at)
+                .all())
+    
+    return sum(p.amount for p in payments if p.amount) if payments else 0.0
+
+
 def get_payment(payment_id: int) -> Optional[Payments]:
     return Payments.query.filter_by(id=payment_id).first()
 
@@ -646,8 +770,8 @@ def upsert_payment(request: Dict[str, Any]) -> Union[Payments, bool]:
     Create or update a payment. Returns Payments instance or False on error.
     """
     try:
-        pay_id = request.get('id')
-        if pay_id:
+        pay_id = int(request.get('id'))
+        if pay_id > 0:
             pay = Payments.query.filter_by(id=pay_id).first()
             if not pay:
                 return None
@@ -705,8 +829,8 @@ def get_service(service_id: int) -> Optional[Services]:
 
 def upsert_service(request: Dict[str, Any]) -> Union[Services, bool]:
     try:
-        sid = request.get('id')
-        if sid:
+        sid = int(request.get('id'))
+        if sid > 0:
             s = Services.query.filter_by(id=sid).first()
             if not s:
                 return None
@@ -758,6 +882,11 @@ def get_vehicles() -> List[Vehicles]:
     return Vehicles.query.all()
 
 
+def get_vehicle_types() -> List[str]:
+    types = db.session.query(Vehicles.type).distinct().all()
+    return [t[0] for t in types if t[0] is not None]
+
+
 def get_vehicle(vehicle_id: int) -> Optional[Vehicles]:
     return Vehicles.query.filter_by(id=vehicle_id).first()
 
@@ -768,8 +897,8 @@ def get_customer_vehicles(customer_id: int) -> List[Vehicles]:
 
 def upsert_vehicle(request: Dict[str, Any]) -> Union[Vehicles, bool]:
     try:
-        vid = request.get('id')
-        if vid:
+        vid = int(request.get('id'))
+        if vid > 0:
             v = Vehicles.query.filter_by(id=vid).first()
             if not v:
                 return None
@@ -817,14 +946,25 @@ def get_bays() -> List[Bays]:
     return Bays.query.all()
 
 
+def get_available_bays() -> List[Bays]:
+    occupied_bay_ids = db.session.query(Appointments.bay_id).filter(
+        # ~((Appointments.end_time <= start_time) | (Appointments.start_time >= end_time))
+        ~((Appointments.end_time <= datetime.now()))
+    ).distinct().all()
+    occupied_bay_ids = [bay_id for (bay_id,) in occupied_bay_ids]
+
+    available_bays = Bays.query.filter(~Bays.id.in_(occupied_bay_ids)).all()
+    return available_bays
+
+
 def get_bay(bay_id: int) -> Optional[Bays]:
     return Bays.query.filter_by(id=bay_id).first()
 
 
 def upsert_bay(request: Dict[str, Any]) -> Union[Bays, bool]:
     try:
-        bid = request.get('id')
-        if bid:
+        bid = int(request.get('id'))
+        if bid > 0:
             b = Bays.query.filter_by(id=bid).first()
             if not b:
                 return None
@@ -870,8 +1010,8 @@ def get_role(role_id: int) -> Optional[Roles]:
 
 def upsert_role(request: Dict[str, Any]) -> Union[Roles, bool]:
     try:
-        rid = request.get('id')
-        if rid:
+        rid = int(request.get('id'))
+        if rid > 0:
             r = Roles.query.filter_by(id=rid).first()
             if not r:
                 return None
@@ -911,14 +1051,18 @@ def get_statuses() -> List[Status]:
     return Status.query.all()
 
 
+def get_status_for_appointments() -> List[Status]:
+    return Status.query.filter(Status.status.in_(['In Queue', 'Now Serving', 'Completed', 'Cancelled'])).all()
+
+
 def get_status(status_id: int) -> Optional[Status]:
     return Status.query.filter_by(id=status_id).first()
 
 
 def upsert_status(request: Dict[str, Any]) -> Union[Status, bool]:
     try:
-        sid = request.get('id')
-        if sid:
+        sid = int(request.get('id'))
+        if sid > 0:
             s = Status.query.filter_by(id=sid).first()
             if not s:
                 return None
@@ -962,10 +1106,15 @@ def get_feedback(feedback_id: int) -> Optional[Feedbacks]:
     return Feedbacks.query.filter_by(id=feedback_id).first()
 
 
+def get_average_feedback_rating() -> float:
+    feedbacks = Feedbacks.query.all()
+    return sum(feedback.rating for feedback in feedbacks) / len(feedbacks) if feedbacks else 0.0
+
+
 def upsert_feedback(request: Dict[str, Any]) -> Union[Feedbacks, bool]:
     try:
-        fid = request.get('id')
-        if fid:
+        fid = int(request.get('id'))
+        if fid > 0:
             f = Feedbacks.query.filter_by(id=fid).first()
             if not f:
                 return None
@@ -1053,8 +1202,8 @@ def get_notifications() -> List[Notifications]:
 
 def upsert_notification(request: Dict[str, Any]) -> Union[Notifications, bool]:
     try:
-        nid = request.get('id')
-        if nid:
+        nid = int(request.get('id'))
+        if nid > 0:
             n = Notifications.query.filter_by(id=nid).first()
             if not n:
                 return None
@@ -1108,8 +1257,8 @@ def get_loyalty(loyalty_id: int) -> Optional[Loyalties]:
 
 def upsert_loyalty(request: Dict[str, Any]) -> Union[Loyalties, bool]:
     try:
-        lid = request.get('id')
-        if lid:
+        lid = int(request.get('id'))
+        if lid > 0:
             l = Loyalties.query.filter_by(id=lid).first()
             if not l:
                 return None
@@ -1269,7 +1418,7 @@ def get_available_bay_and_staff(start_time, duration, washers_needed, recursion_
     return get_available_bay_and_staff(new_start, duration, washers_needed, recursion_depth + 1)
 
 
-def quick_book(service_id, customer_id=None, vehicle_id=None, appointment_date=None):
+def quick_book(service_id, customer_id=None, vehicle_id=None, appointment_date=None, appointment_id=None):
     """
     Quickly books a appointment.
     Creates temporary account, customer, vehicle, and assigns bay + washers automatically.
@@ -1304,7 +1453,6 @@ def quick_book(service_id, customer_id=None, vehicle_id=None, appointment_date=N
 
         # Customer lookup
         customer = Customers.query.get(customer_id)
-        vehicle = Vehicles.query.get(vehicle_id)
 
         if not customer:
             
@@ -1322,6 +1470,9 @@ def quick_book(service_id, customer_id=None, vehicle_id=None, appointment_date=N
             customer = Customers(account_id=account.id, is_registered=False)
             db.session.add(customer)
             db.session.flush()
+
+        # Vehicle lookup
+        vehicle = Vehicles.query.get(vehicle_id)
 
         # Create temporary vehicle record
         if not vehicle:

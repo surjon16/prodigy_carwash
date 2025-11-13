@@ -29,9 +29,10 @@ class Accounts(UserMixin, db.Model):
     birth_date = db.Column(db.DateTime)
     address = db.Column(db.String(100))
     image_profile = db.Column(db.String(128), default="img/no-photo.jpg")
+    token = db.Column(db.String(500), nullable=True)
 
     # login
-    email = db.Column(db.String(100))
+    email = db.Column(db.String(100), unique=True, nullable=True)
     password_hash = db.Column(db.String(128))
 
     # additional_conditions
@@ -46,7 +47,8 @@ class Accounts(UserMixin, db.Model):
     role_id = db.Column(db.Integer, db.ForeignKey('roles.id'), nullable=True)
     customer = db.relationship('Customers', uselist=False, back_populates='account', cascade="all, delete-orphan")
     staff = db.relationship('Staffs', uselist=False, back_populates='account', cascade="all, delete-orphan")
-    notifications = db.relationship('Notifications', back_populates='account', cascade="all, delete-orphan", lazy='dynamic')
+    sent = db.relationship('Notifications', back_populates='sender', cascade="all, delete-orphan", lazy='dynamic', foreign_keys='Notifications.sender_id')
+    inbox = db.relationship('Notifications', back_populates='recipient', cascade="all, delete-orphan", lazy='dynamic', foreign_keys='Notifications.recipient_id')
 
     # Password management
     @property
@@ -422,10 +424,10 @@ class Notifications(db.Model):
     updated_at = db.Column(db.DateTime, default=db.func.current_timestamp(), onupdate=db.func.current_timestamp())
 
     recipient_id = db.Column(db.Integer, db.ForeignKey('accounts.id'), nullable=True)
-    account = db.relationship("Accounts", back_populates="notifications", foreign_keys=[recipient_id])
+    recipient = db.relationship("Accounts", back_populates="inbox", foreign_keys=[recipient_id])
 
     sender_id = db.Column(db.Integer, db.ForeignKey('accounts.id'), nullable=True)
-    sender = db.relationship("Accounts", back_populates="notifications", foreign_keys=[sender_id])
+    sender = db.relationship("Accounts", back_populates="sent", foreign_keys=[sender_id])
 
     def to_json(self):
         return {
@@ -434,7 +436,7 @@ class Notifications(db.Model):
             'notif_type': self.notif_type,
             'viewed': self.viewed,
             'recipient_id': self.recipient_id,
-            'recipient': self.account.to_json() if self.account else None,
+            'recipient': self.recipient.to_json() if self.recipient else None,
             'sender_id': self.sender_id,
             'sender': self.sender.to_json() if self.sender else None,
             'created_at': self.created_at.isoformat() if self.created_at else None,

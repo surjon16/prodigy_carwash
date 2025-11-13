@@ -16,7 +16,7 @@ Settings
                 </div>
                 <div class="modal-body card-body">
                     <div class="row">
-                        <input id="id" name="id" type="text" class="form-control form-control-alternative" hidden value="-1">
+                        <input id="bay_id" name="bay_id" type="text" class="form-control form-control-alternative" hidden value="-1">
                     </div>
                     <div class="row">
                         <div class="col-md-12">
@@ -46,7 +46,7 @@ Settings
                 </div>
                 <div class="modal-body card-body">
                     <div class="row">
-                        <input id="id" name="id" type="text" class="form-control form-control-alternative" hidden value="-1">
+                        <input id="role_id" name="role_id" type="text" class="form-control form-control-alternative" hidden value="-1">
                     </div>
                     <div class="row">
                         <div class="col-md-12">
@@ -76,7 +76,7 @@ Settings
                 </div>
                 <div class="modal-body card-body">
                     <div class="row">
-                        <input id="id" name="id" type="text" class="form-control form-control-alternative" hidden value="-1">
+                        <input id="status_id" name="status_id" type="text" class="form-control form-control-alternative" hidden value="-1">
                     </div>
                     <div class="row">
                         <div class="col-md-12">
@@ -106,7 +106,7 @@ Settings
                 </div>
                 <div class="modal-body card-body">
                     <div class="row">
-                        <input id="id" name="id" type="text" class="form-control form-control-alternative" hidden value="-1">
+                        <input id="service_id" name="service_id" type="text" class="form-control form-control-alternative" hidden value="-1">
                     </div>
                     <div class="row">
                         <div class="col-md-12">
@@ -141,6 +141,27 @@ Settings
                                 <label class="form-control-label">Duration</label>
                                 <input id="duration" name="duration" type="number"
                                     class="form-control form-control-alternative">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label class="form-control-label">Washers Needed</label>
+                                <input id="washers_needed" name="washers_needed" type="number"
+                                    class="form-control form-control-alternative">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label class="form-control-label">Vehicle Type</label>
+                                <select id="type" name="type" data-style="bg-white px-4 py-3 shadow-sm" class="form-control form-control-alternative selectpicker" data-live-search="true">
+                                    {% for i in data.services|map(attribute='type')|unique|list %}
+                                    <option value="{{ i }}">{{ i }}</option>
+                                    {% endfor %}
+                                </select>
                             </div>
                         </div>
                     </div>
@@ -195,6 +216,8 @@ Settings
                                     <th scope="col">Description</th>
                                     <th scope="col">Price</th>
                                     <th scope="col">Duration</th>
+                                    <th scope="col">Washers Needed</th>
+                                    <th scope="col">Vehicle Type</th>
                                     <th scope="col" class="text-right">Action</th>
                                 </tr>
                             </thead>
@@ -215,6 +238,12 @@ Settings
                                     </td>
                                     <td>
                                         {{service.duration}}
+                                    </td>
+                                    <td>
+                                        {{service.washers_needed}}
+                                    </td>
+                                    <td>
+                                        {{service.type}}
                                     </td>
                                     <td class="text-right">
                                         <button onclick='EditService(this)' class="btn btn-warning btn-sm" >Edit</button>
@@ -384,11 +413,10 @@ Settings
 
     var AddNewService = function () {
 
-        $('#id').val('-1')
-        $('#name').val('')
-        $('#description').val('')
-        $('#price').val('')
-        $('#duration').val('')
+        $('input').val('')
+        $(".selectpicker").selectpicker('deselectAll');
+        $(".selectpicker").selectpicker('val', []);
+        $('#service_id').val('-1')
 
         $(modal_services).modal({
             "backdrop": "static",
@@ -401,11 +429,13 @@ Settings
     var SaveService = function () {
 
         data = {
-            'id'            : $('#id').val(),
-            'name'          : $('#name').val(),
-            'description'   : $('#description').val(),
-            'price'         : $('#price').val(),
-            'duration'      : $('#duration').val()
+            'id'                : $('#service_id').val(),
+            'name'              : $('#name').val(),
+            'description'       : $('#description').val(),
+            'price'             : $('#price').val(),
+            'duration'          : $('#duration').val(),
+            'washers_needed'    : $('#washers_needed').val(),
+            'type'              : $('#type').val()
         }
 
         Controller.POST('/api/service/upsert', data).done(function (result) {
@@ -416,11 +446,13 @@ Settings
                     location.reload()
                 }
                 else {
-                    e.childNodes[1].innerHTML = data.id
-                    e.childNodes[3].innerHTML = data.name
-                    e.childNodes[5].innerHTML = data.description
-                    e.childNodes[7].innerHTML = data.price
-                    e.childNodes[9].innerHTML = data.duration
+                    e.childNodes[1].innerHTML   = data.id
+                    e.childNodes[3].innerHTML   = data.name
+                    e.childNodes[5].innerHTML   = data.description
+                    e.childNodes[7].innerHTML   = data.price
+                    e.childNodes[9].innerHTML   = data.duration
+                    e.childNodes[11].innerHTML  = data.washers_needed
+                    e.childNodes[13].innerHTML  = data.type
                 }
             }
         })
@@ -433,11 +465,15 @@ Settings
 
         Controller.GET('/api/service/get/' + id, {}).done(function (result) {
 
-            $('#id').val(result.id)
+            result = result.data
+
+            $('#service_id').val(result.id)
             $('#name').val(result.name)
             $('#description').val(result.description)
             $('#price').val(result.price)
             $('#duration').val(result.duration)
+            $('#washers_needed').val(result.washers_needed)
+            $("#type").selectpicker('val', result.type)
 
             $(modal_services).modal({
                 "backdrop": "static",
@@ -481,7 +517,7 @@ Settings
 
     var AddNewBay = function () {
 
-        $('#id').val('-1')
+        $('#bay_id').val('-1')
         $('#bay').val('')
 
         $(modal_bays).modal({
@@ -495,7 +531,7 @@ Settings
     var SaveBay = function () {
 
         data = {
-            'id'    : $('#id').val(),
+            'id'    : $('#bay_id').val(),
             'bay'  : $('#bay').val()
         }
 
@@ -521,7 +557,9 @@ Settings
 
         Controller.GET('/api/bay/get/' + id, {}).done(function (result) {
 
-            $('#id').val(result.id)
+            result = result.data
+
+            $('#bay_id').val(result.id)
             $('#bay').val(result.bay)
 
             $(modal_bays).modal({
@@ -566,7 +604,7 @@ Settings
 
     var AddNewRole = function () {
 
-        $('#id').val('-1')
+        $('#role_id').val('-1')
         $('#role').val('')
 
         $(modal_roles).modal({
@@ -580,7 +618,7 @@ Settings
     var SaveRole = function () {
 
         data = {
-            'id'    : $('#id').val(),
+            'id'    : $('#role_id').val(),
             'role'  : $('#role').val()
         }
 
@@ -606,7 +644,9 @@ Settings
 
         Controller.GET('/api/role/get/' + id, {}).done(function (result) {
 
-            $('#id').val(result.id)
+            result = result.data
+
+            $('#role_id').val(result.id)
             $('#role').val(result.role)
 
             $(modal_roles).modal({
@@ -651,7 +691,7 @@ Settings
 
     var AddNewStatus = function () {
 
-        $('#id').val('-1')
+        $('#status_id').val('-1')
         $('#status').val('')
 
         $(modal_status).modal({
@@ -665,7 +705,7 @@ Settings
     var SaveStatus = function () {
 
         data = {
-            'id': $('#id').val(),
+            'id': $('#status_id').val(),
             'status': $('#status').val()
         }
 
@@ -691,7 +731,9 @@ Settings
 
         Controller.GET('/api/status/get/' + id, {}).done(function (result) {
 
-            $('#id').val(result.id)
+            result = result.data
+
+            $('#status_id').val(result.id)
             $('#status').val(result.status)
 
             $(modal_status).modal({

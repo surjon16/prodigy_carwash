@@ -157,7 +157,7 @@ class Populate:
         customer_profiles = [
             {'fname': 'Juan', 'lname': 'Dela Cruz', 'email': 'senior@gmail.com', 'is_senior': True},
             {'fname': 'Pedro', 'lname': 'Magbanua', 'email': 'pwd@gmail.com', 'is_pwd': True},
-            {'fname': 'Maria', 'lname': 'Guest', 'email': 'guest@gmail.com', 'is_registered': False}
+            # {'fname': 'Maria', 'lname': 'Guest', 'email': 'guest@gmail.com', 'is_registered': False}
         ]
 
         customers = []

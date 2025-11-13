@@ -121,12 +121,21 @@
 }
 
 .bay-badge.badge-primary {
+    background: linear-gradient(135deg, #7a8999, #546578);
+}
+
+.bay-badge.badge-secondary {
     background: linear-gradient(135deg, #007bff, #0056b3);
 }
 
 .bay-badge.badge-danger {
     background: linear-gradient(135deg, #dc3545, #a71d2a);
 }
+
+.bay-badge.badge-success {
+    background: linear-gradient(135deg, #64dc35, #29a71d);
+}
+
 
 /* Current Time Line */
 .current-time-line {
@@ -163,8 +172,11 @@
                                     data-live-search="true" data-max-options="1"
                                     onchange="UpdateVehicleOptions(this)">
                                 <option value="" disabled selected>Select an existing customer</option>
-                                {% for i in data.customers %}
+                                {% for i in data.customers | selectattr('is_registered') %}
                                     <option value="{{i.id}}">{{i.account.full_name}}</option>
+                                {% endfor %}
+                                {% for i in data.customers | rejectattr('is_registered') %}
+                                    <option hidden value="{{i.id}}">{{i.account.full_name}}</option>
                                 {% endfor %}
                             </select>
                         </div>
@@ -224,6 +236,38 @@
             <div class="modal-footer">
                 <button class="btn btn-md btn-danger" data-dismiss="modal">Cancel</button>
                 <button id="save_quick_book" class="btn btn-md btn-success" onclick="SaveQuickBook()">BOOK NOW</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modal-status">
+    <div class="modal-dialog">
+        <div class="modal-content card bg-secondary shadow">
+            <div class="modal-header card-header bg-white border-0">
+                <h4 class="card-title" id="modal-booking-title">Appointment Status</h4>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <input id="appointment_id" name="appointment_id" type="text" class="form-control form-control-alternative" hidden value="-1">
+            </div>
+            <div class="modal-body card-body">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label class="form-control-label">Set Status</label>
+                            <select required id="status_id" name="status_id"
+                                    data-style="bg-white px-4 py-3 shadow-sm" class="form-control selectpicker"
+                                    data-live-search="true" data-max-options="1">
+                                {% for status in data.status %}
+                                    <option value="{{status.id}}">{{status.status}}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-md btn-danger" data-dismiss="modal">Cancel</button>
+                <button class="btn btn-md btn-success" onclick="SaveStatus()">Confirm</button>
             </div>
         </div>
     </div>
@@ -310,7 +354,12 @@
                                                             {% set duration = end - start %}
                                                             {% set top = start * 60 %}   {# 60px per hour #}
                                                             {% set height = duration * 60 %}
-                                                            <div class="bay-badge {% if bay.status.id == 5 %}badge-danger{% else %}badge-primary{% endif %}"
+                                                            <div class="bay-badge 
+                                                                    {% if bay.status.id == 5 %} badge-danger
+                                                                    {% elif bay.status.id == 3 %} badge-secondary 
+                                                                    {% elif bay.status.id == 4 %} badge-success 
+                                                                    {% else %} badge-primary
+                                                                    {% endif %}"
                                                                 style="top: {{ top }}px; height: {{ height }}px; cursor:pointer;"
                                                                 data-appointment-id="{{ bay.id }}"
                                                                 data-customer-id="{{ bay.customer.id }}"
@@ -318,8 +367,9 @@
                                                                 data-vehicle-id="{{ bay.vehicle.id }}"
                                                                 data-vehicle-type="{{ bay.vehicle.type }}"
                                                                 data-service-id="{{ bay.service.id }}"
+                                                                data-status-id="{{ bay.status.id }}"
                                                                 data-start="{{ bay.start_time.strftime('%Y-%m-%dT%H:%M') }}"
-                                                                onclick="openQuickBookModal(this)">
+                                                                onclick="AppointmentStatus(this)">
                                                                 <strong>
                                                                     {{ bay.service.name }}
                                                                     ({% for staff in bay.staffs %}{{staff.account.full_name}}{% if not loop.last %}, {% endif %}{% endfor %})
@@ -373,15 +423,13 @@
                                     <div class="tab-pane fade" id="tabs-icons-text-3" role="tabpanel" aria-labelledby="tabs-icons-text-3-tab">
                                         <div class="table-responsive">
                                             <!-- Projects table -->
-                                            <table class="table align-items-center table-bordered table-hover">
+                                            <table class="table align-items-center table-flush">
                                                 <thead class="thead-light">
                                                     <tr>
-                                                        <th scope="col">Date</th>
-                                                        <th scope="col">Time</th>
-                                                        <th scope="col">Customer</th>
-                                                        <th scope="col">Assigned Staff</th>
-                                                        <th scope="col">Service - Bay</th>
-                                                        <th scope="col">Vehicle</th>
+                                                        <th scope="col">Date & Time</th>
+                                                        <th scope="col">Bay - Service</th>
+                                                        <th scope="col">Customer - Vehicle</th>
+                                                        <th scope="col">Assignee</th>
                                                         <th scope="col">Status</th>
                                                     </tr>
                                                 </thead>
@@ -389,28 +437,23 @@
                                                     {% for appointment in data.upcoming | sort(attribute="start_time") %}
                                                         <tr>
                                                             <th scope="row">
-                                                                {{ appointment.start_time.strftime("%a %b %d, %Y") }}
+                                                                {{ appointment.start_time.strftime("%I:%M%p") }} - {{ appointment.end_time.strftime("%I:%M%p") }}
+                                                                <br>
+                                                                {{ appointment.start_time.strftime("%a %b %d, %Y") }} 
                                                             </th>
                                                             <td>
-                                                                {{ appointment.start_time.strftime("%I:%M%p") }} - {{ appointment.end_time.strftime("%I:%M%p") }}
+                                                                {{ appointment.bay.bay }} <i class="fa fa-arrow-right"></i> {{ appointment.service.name }} ({{ appointment.service.type }})
                                                             </td>
                                                             <td>
-                                                                {{ appointment.customer.account.first_name }} {{ appointment.customer.account.last_name }}
+                                                                {{ appointment.customer.account.full_name }}
+                                                                {% if appointment.vehicle.plate_number %}
+                                                                    <br> {{ appointment.vehicle.plate_number }} {{ appointment.vehicle.model }}
+                                                                {% endif %}
                                                             </td>
                                                             <td>
                                                                 {% for staff in appointment.staffs %}
-                                                                    {{ staff.account.first_name }} {{ staff.account.last_name }} <br>
+                                                                    {{ staff.account.full_name }} <br>
                                                                 {% endfor %}
-                                                            </td>
-                                                            <td>
-                                                                {{ appointment.service.name }} on {{ appointment.bay.bay }}
-                                                            </td>
-                                                            <td>
-                                                                {% if appointment.vehicle.plate_number %}
-                                                                    {{ appointment.vehicle.plate_number }} {{ appointment.vehicle.model }}
-                                                                {% else %}
-                                                                    Not Indicated
-                                                                {% endif %}
                                                             </td>
                                                             <td>
                                                                 {{ appointment.status.status }}
@@ -441,10 +484,11 @@
 </script>
 
 <script>
-setSideBar('#menu-home');
+setSideBar('#menu-appointments');
 
 let isEditing = false; // flag to know if we're editing or creating
 const modal = '#modal-booking';
+const modal_status = '#modal-status';
 const bookButton = document.getElementById('save_quick_book');
 
 const formFields = {
@@ -525,7 +569,35 @@ function clearError(id) {
 // MODAL HANDLING
 // ---------------------------
 function QuickBook() {
+    clearError('appointment_date_error');
     openQuickBookModal();
+}
+
+function AppointmentStatus(element = null) {
+    $(modal_status).modal({
+        backdrop: 'static',
+        keyboard: true,
+        show: true
+    });
+
+    $('#appointment_id').val(element.dataset.appointmentId)
+    $('.selectpicker').selectpicker('refresh');
+    $("#status_id").selectpicker('val', element.dataset.statusId)
+
+}
+
+function SaveStatus() {
+    data = {
+        'appointment_id': $('#appointment_id').val(),
+        'status_id': $('#status_id').val()
+    }
+    console.log(data)
+    Controller.POST('/api/appointment/set/status', data).done(function(result) {
+        if (result.success) {
+            $(modal).modal('hide');
+            location.reload();
+        }
+    });
 }
 
 function openQuickBookModal(element = null) {
@@ -543,7 +615,7 @@ function openQuickBookModal(element = null) {
     formFields.date.value = '';
     $('.selectpicker').selectpicker('refresh');
 
-    // If element is passed → edit existing appointment
+    // If element is passed, edit existing appointment
     if (element) {
         isEditing = true;
 
@@ -694,10 +766,14 @@ function SaveQuickBook() {
 
     // If editing, include appointment_id
     if (isEditing && formFields.customer.dataset.appointmentId) {
-        data.appointment_id = formFields.customer.dataset.appointmentId;
+        data.id = formFields.customer.dataset.appointmentId;
+        // data.appointment_id = formFields.customer.dataset.appointmentId;
     }
 
-    const endpoint = isEditing ? '/api/update_appointment' : '/api/quick_book';
+    const endpoint = isEditing ? '/api/appointment/upsert' : '/api/quick_book';
+    // const endpoint = '/api/quick_book';
+
+    console.log("Submitting data:", data);
 
     Controller.POST(endpoint, data).done(function(result) {
         if (result.success) {

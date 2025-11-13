@@ -371,9 +371,9 @@ Customer Information
                                             {{ appointment.bay.bay }}
                                         </td>
                                         <td>
-                                            {% for washer in appointment.washers %}
-                                                {{ washer.first_name }} {{ washer.last_name }} <br>
-                                            {% endfor %}
+                                            {% for staff in appointment.staffs %}
+                                                {{ staff.account.full_name }} <br>
+                                            {% endfor %}  
                                         </td>
                                         <td>
                                             {{ appointment.service.name }}

@@ -6,11 +6,50 @@ from typing import Any, Dict, List, Optional
 from data.repo import *
 from data.seed.populate import Populate
 
+from data.services.appointment import Appointment
+
 api = Blueprint('api', __name__, url_prefix='/api')
 
 # -------------------------
 # Helpers
 # -------------------------
+
+def require_token(func):
+    """Decorator to enforce Bearer Token authentication."""
+    from functools import wraps
+
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        auth_header = request.headers.get("Authorization")
+        if not auth_header or not auth_header.startswith("Bearer "):
+            return jsonify({"error": "Missing or invalid Authorization header"}), 401
+
+        token = auth_header.split(" ")[1]
+        if token not in get_account_tokens():
+            return jsonify({"error": "Invalid or expired token"}), 403
+
+        # Optional: attach user info to request
+        request.user = token
+        return func(*args, **kwargs)
+
+    return wrapper
+
+
+def check_account(request):
+    auth_header = request.headers.get("Authorization")
+
+    if not auth_header or not auth_header.startswith("Bearer "):
+        return jsonify({"error": "Missing or invalid token"}), 401
+
+    token = auth_header.split(" ")[1]
+    user = decode_token(token)
+
+    if not user:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    return jsonify({"message": "Welcome", "user": user.to_dict()})
+
+
 def get_request_data() -> Dict[str, Any]:
     """Return JSON body or form data as a dict (prioritize JSON)."""
     if request.is_json:
@@ -115,6 +154,8 @@ def serialize_service(svc) -> Dict[str, Any]:
         "description": getattr(svc, "description", None),
         "price": float(getattr(svc, "price", 0)) if getattr(svc, "price", None) is not None else None,
         "duration": getattr(svc, "duration", None),
+        "washers_needed": getattr(svc, "washers_needed", None),
+        "type": getattr(svc, "type", None),
         "created_at": _iso(getattr(svc, "created_at", None)),
         "updated_at": _iso(getattr(svc, "updated_at", None)),
     }
@@ -256,6 +297,25 @@ def serialize_appointment(a) -> Dict[str, Any]:
 # ----------------------------
 # Endpoints per entity (CRUD)
 # ----------------------------
+
+# LOGIN
+@api.route('/login', methods=['POST'])
+def api_login():
+    data = get_request_data()
+    try:
+        email = data.get('email')
+        password = data.get('password')
+        if not email or not password:
+            return jsonify({'success': False, 'message': 'Email and password are required'}), 400
+
+        account = authenticate_account(email, password)
+        if not account:
+            return jsonify({'success': False, 'message': 'Invalid credentials'}), 401
+
+        return jsonify({'success': True, 'data': serialize_account(account)})
+    except Exception as e:
+        current_app.logger.exception("api_login error")
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 # ACCOUNTS
 @api.route('/account/get/<int:id>', methods=['GET'])
@@ -637,6 +697,19 @@ def api_get_appointment(id):
         current_app.logger.exception("api_get_appointment error")
         return jsonify({'success': False, 'error': str(e)}), 500
 
+@api.route('/appointment/set/status', methods=['POST'])
+def api_set_appointment_status():
+    data = get_request_data()
+    try:
+        appointment_id  = data.get('appointment_id')
+        status_id       = data.get('status_id')
+        obj = Appointment.set_appointment_status(appointment_id, status_id)
+        if obj in (False, None):
+            return jsonify({'success': False, 'message': 'Upsert failed'}), 400
+        return jsonify({'success': True, 'data': serialize_appointment(obj)})
+    except Exception as e:
+        current_app.logger.exception("api_set_appointment_status error")
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 @api.route('/appointment/get/all', methods=['GET'])
 def api_get_all_appointments():
@@ -925,7 +998,7 @@ def api_get_status(id):
 @api.route('/status/get/all', methods=['GET'])
 def api_get_all_status():
     try:
-        items = get_all_status()
+        items = get_all_statuses()
         return jsonify({'success': True, 'data': [serialize_status(x) for x in items]})
     except Exception as e:
         current_app.logger.exception("api_get_all_status error")
@@ -1027,9 +1100,10 @@ def api_quick_book():
         service_id = data.get('service_id')
         customer_id = data.get('customer_id')
         appointment_date = data.get('appointment_date')
+        appointment_id = data.get('appointment_id')
 
         if 'quick_book' in globals() and callable(quick_book):
-            response = quick_book(service_id, customer_id, vehicle_id, appointment_date)
+            response = quick_book(service_id, customer_id, vehicle_id, appointment_date, appointment_id)
             return jsonify({'success': True, 'message': response})
         return jsonify({'success': False, 'message': 'No quick_book function found'}), 500
     except Exception as e:

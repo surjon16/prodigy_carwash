@@ -1,0 +1,251 @@
+{% extends 'staff/shared/layout.html' %}
+{% block title %}
+    Staffs
+{% endblock %}
+
+{% block css %}
+{% endblock %}
+
+
+{% block modal %}
+<div class="modal fade" id="modal-schedule>
+    <div class="modal-dialog">
+        <div class="modal-content card bg-secondary shadow">
+            <div class="modal-header card-header bg-white border-0">
+                <h4 class="card-title" id="modal-booking-title">Schedule</h4>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body card-body">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label class="form-control-label">
+                                Staff
+                            </label>
+                            <select required id="staff_id" name="staff_id" 
+                                    data-style="bg-03 px-4 py-3" class="form-control selectpicker" 
+                                    data-live-search="true" data-max-options="1"">
+                                <option value="" disabled selected>Select an existing staff</option>
+                                {% for i in data.staffs %}
+                                    <option value="{{i.id}}">{{i.account.full_name}}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="form-group">
+                        <label class="form-control-label">Vehicle ID</label>
+                        <select required id="vehicle_id" name="vehicle_id"
+                                data-style="bg-white px-4 py-3 shadow-sm" class="form-control selectpicker"
+                                data-live-search="true" data-max-options="1"
+                                onchange="UpdateVehicleTypeOptions(this)">
+                            <option value="" disabled selected>Select a vehicle type first</option>
+                        </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="form-group">
+                        <label class="form-control-label">Vehicle Type</label>
+                        <select required id="vehicle_type" name="vehicle_type"
+                                data-style="bg-white px-4 py-3 shadow-sm" class="form-control selectpicker"
+                                data-live-search="true" data-max-options="1"
+                                onchange="UpdateServiceOptions(this)">
+                            <option value="" disabled selected>Select an option</option>
+                            {% for i in data.services|map(attribute='type')|unique|list %}
+                            <option value="{{ i }}">{{ i }}</option>
+                            {% endfor %}
+                        </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="form-group">
+                        <label class="form-control-label">Service</label>
+                        <select required id="service_id" name="service_id"
+                                data-style="bg-white px-4 py-3 shadow-sm" class="form-control selectpicker"
+                                data-live-search="true" data-max-options="1" onchange="CheckAppointments()">
+                            <option value="" disabled selected>Select a vehicle type first</option>
+                        </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label for="appointment_date" class="form-control-label">Appointment Date</label>
+                            <input class="form-control form-control-alternative" type="datetime-local" id="appointment_date" onchange="CheckAppointments()">
+                        </div>
+                        <span id="appointment_date_error" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-md btn-danger" data-dismiss="modal">Cancel</button>
+                <button id="save_quick_book" class="btn btn-md btn-success" onclick="SaveQuickBook()">BOOK NOW</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="main-content" id="panel">
+    <!-- Header -->
+    <div class="header bg-primary pb-6">
+        <div class="container-fluid">
+            <div class="header-body">
+                <div class="row align-items-center py-4">
+                    <div class="col-lg-6 col-7">
+                        <p class="display-2 text-white d-inline-block mb-0">Staffs</p>
+                    </div>
+                </div>
+            </div>  
+        </div>
+    </div>
+
+    <!-- Page content -->
+    <div class="container-fluid mt--6">
+        <div class="row">
+            <div class="col">
+                <div class="card">
+                    <div class="card-header border-0">
+                        <button type="submit" class="btn btn-primary m-0 float-right" onclick="NewSchedule()">New Schedule</button>
+                        <div class="nav-wrapper">
+                            <ul class="nav nav-pills" id="tabs-icons-text" role="tablist">
+                                <li class="nav-item">
+                                    <a class="nav-link mb-sm-3 mb-md-0 active" id="tabs-icons-text-1-tab" data-toggle="tab" href="#tabs-icons-text-1" role="tab" aria-controls="tabs-icons-text-1" aria-selected="true" onclick="scrollToCurrentTime()">
+                                        <i class="ni ni-badge mr-2"></i>On Duty
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link mb-sm-3 mb-md-0" id="tabs-icons-text-2-tab" data-toggle="tab" href="#tabs-icons-text-2" role="tab" aria-controls="tabs-icons-text-2" aria-selected="true">
+                                        <i class="ni ni-calendar-grid-58 mr-2"></i>Shift / Schedule
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <div class="card-body p-0">
+                                <div class="tab-content" id="myTabContent">
+                                    <div class="tab-pane fade show active" id="tabs-icons-text-1" role="tabpanel" aria-labelledby="tabs-icons-text-1-tab">
+                                        <div class="table-responsive">
+                                            <!-- Projects table -->
+                                            <table class="table align-items-center table-hover table-bordered">
+                                                <thead class="thead-light">
+                                                    <tr>
+                                                        <th scope="col">Staff</th>
+                                                        <th scope="col">Shift</th>
+                                                        <th scope="col">Front Desk</th>
+                                                        <th scope="col">Is On Duty</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% for staff in data.on_duty %}
+                                                        <tr id="staff-{{staff.id}}" data-id={{staff.id}}>
+                                                            <td>
+                                                                {{ staff.full_name }}
+                                                            </td>
+                                                            <td>
+                                                                {{ staff.shift }}
+                                                            </td>
+                                                            <td>
+                                                                {{ staff.is_front_desk }}
+                                                            </td>
+                                                            <td>
+                                                                {{ staff.is_on_shift }}
+                                                            </td>
+                                                        </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+
+                                    <div class="tab-pane fade" id="tabs-icons-text-2" role="tabpanel" aria-labelledby="tabs-icons-text-2-tab">
+                                        <div class="table-responsive">
+                                            <table class="table align-items-center table-hover table-bordered">
+                                                <thead class="thead-light">
+                                                    <tr>
+                                                        <th scope="col"></th>
+                                                        <th scope="col">Staff</th>
+                                                        {% for day in data.days %}
+                                                            <th scope="col">{{day}}</th>
+                                                        {% endfor %}
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% for schedule in data.schedules %}
+                                                    <tr id="staff-{{schedule.staff_id}}" data-id={{schedule.staff_id}}>
+                                                        <td>
+                                                            <button onclick='Edit(this)' class="btn btn-warning btn-sm"><i class="fa fa-edit"></i></button>
+                                                        </td>
+                                                        <td>
+                                                            {{ schedule.staff_name }}
+                                                        </td>
+                                                        <td>
+                                                            {{ schedule.Monday }}
+                                                        </td>
+                                                        <td>
+                                                            {{ schedule.Tuesday }}
+                                                        </td>
+                                                        <td>
+                                                            {{ schedule.Wednesday }}
+                                                        </td>
+                                                        <td>
+                                                            {{ schedule.Thursday }}
+                                                        </td>
+                                                        <td>
+                                                            {{ schedule.Friday }}
+                                                        </td>
+                                                        <td>
+                                                            {{ schedule.Saturday }}
+                                                        </td>
+                                                        <td>
+                                                            {{ schedule.Sunday }}
+                                                        </td>
+                                                    </tr>
+                                                    {% endfor %}
+
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+
+<script>
+  const SERVICES = null;
+  const VEHICLES = null;
+</script>
+
+<script>
+
+    setSideBar('#menu-schedules');
+    const modal = '#modal-schedule';
+
+    var Edit = function(e) {
+
+        id = e.parentNode.parentNode.dataset.id
+        Controller.GET('/api/')
+
+    }
+
+</script>
+
+{% endblock %}

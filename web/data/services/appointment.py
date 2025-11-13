@@ -16,7 +16,14 @@ class Appointment:
     
     def set_appointment_status(appointment_id: int, status_id: int) -> None:
         """Update the status of an appointment."""
-        appointment = Appointments.query.filter_by(id=appointment_id).first()
-        if appointment:
+        try:
+            appointment = Appointments.query.filter_by(id=appointment_id).first()
+            if not appointment:                
+                return None
             appointment.status_id = status_id
             db.session.commit()
+            return appointment
+        except Exception as e:
+            db.session.rollback()
+            return False
+        

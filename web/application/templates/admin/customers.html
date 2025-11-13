@@ -17,6 +17,8 @@ Customer Records
                     <div class="row">
                         <input id="id" name="id" type="text" class="form-control form-control-alternative" hidden
                             value="-1">
+                        <input id="account_id" name="account_id" type="text" class="form-control form-control-alternative" hidden
+                            value="-1">
                     </div>
                     <div class="row">
                         <div class="col-md-12">
@@ -141,20 +143,10 @@ Customer Records
                     <div class="card-header border-0">
                         <div class="row align-items-center">
                             <div class="col">
-                                <form action="/admin/customers/search" method="post">
-                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-                                    <select id="customer_id" name="customer_id" data-style="bg-white shadow-sm" class="form-control form-control-sm form-control-alternative selectpicker w-50" data-live-search="true">
-                                        <option value="-1" selected hidden>Please Select</option>
-                                        {% for customer in customers %}
-                                            <option value="{{customer.id}}">({{customer.id}}) {{customer.account.first_name}} {{customer.account.last_name}}</option>
-                                        {% endfor %}
-                                    </select>
-                                    <button class="btn btn-sm btn-primary" type="submit">Search</button>
-
-                                </form>
+                                <h3 class="mb-0">Registered Customers</h3>
                             </div>
                             <div class="col text-right">
-                                <button class="btn btn-sm btn-primary" onclick="AddNew()">Add New</button>
+                                <button class="btn btn-sm btn-primary" onclick="NewCustomer()">New Customer</button>
                             </div>
                         </div>
                     </div>
@@ -173,32 +165,91 @@ Customer Records
                             </thead>
                             <tbody>
                                 {% for customer in customers %}
-                                    <tr id='customer-{{customer.id}}' data-id={{customer.id}}>
-                                        <th scope="row">
-                                            {{customer.account.first_name}} {{customer.account.last_name}}
-                                        </th>
-                                        <td>
-                                            {{customer.account.address}}
-                                        </td>
-                                        <td>
-                                            {{customer.account.email}}
-                                        </td>
-                                        <td>
-                                            {{customer.account.phone_1}}
-                                        </td>
-                                        <td>
-                                            {% if customer.is_registered %}
-                                                Registered
-                                            {% else %}
-                                                Pending Verification
-                                            {% endif %}
-                                        </td>
-                                        <td class="text-right">
-                                            <a href="/admin/customer/{{customer.id}}" class="btn btn-info btn-sm text-white"><i class="fa fa-eye"></i></a>
-                                            <button onclick='Edit(this)' class="btn btn-warning btn-sm"><i class="fa fa-edit"></i></button>
-                                            <button onclick='Delete(this)' class="btn btn-danger btn-sm"><i class="fa fa-trash"></i></button>
-                                        </td>
-                                    </tr>
+                                    {% if customer.is_registered %}
+                                        <tr id='customer-{{customer.id}}' data-id={{customer.id}} data-account-id={{customer.account.id}}>
+                                            <th scope="row">
+                                                {{customer.account.first_name}} {{customer.account.last_name}}
+                                            </th>
+                                            <td>
+                                                {{customer.account.address}}
+                                            </td>
+                                            <td>
+                                                {{customer.account.email}}
+                                            </td>
+                                            <td>
+                                                {{customer.account.phone_1}}
+                                            </td>
+                                            <td>
+                                                {% if customer.is_registered %}
+                                                    Registered
+                                                {% else %}
+                                                    Pending Verification
+                                                {% endif %}
+                                            </td>
+                                            <td class="text-right">
+                                                <a href="/admin/customer/{{customer.id}}" class="btn btn-info btn-sm text-white"><i class="fa fa-eye"></i></a>
+                                                <button onclick='Edit(this)' class="btn btn-warning btn-sm"><i class="fa fa-edit"></i></button>
+                                                <button onclick='Delete(this)' class="btn btn-danger btn-sm"><i class="fa fa-trash"></i></button>
+                                            </td>
+                                        </tr>
+                                    {% endif %}                                
+                                {% endfor %}                                
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col">
+                <div class="card">
+                    <div class="card-header border-0">
+                        <div class="row align-items-center">
+                            <div class="col">
+                                <h3 class="mb-0">Walk-in/Guest Customers</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <!-- Projects table -->
+                        <table class="table align-items-center table-flush">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th scope="col">Full Name</th>
+                                    <th scope="col">Last Appointment</th>
+                                    <th scope="col">Assigned Staff</th>
+                                    <th scope="col" class="text-right">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for customer in customers %}
+                                    {% if not customer.is_registered %}
+                                        <tr id='customer-{{customer.id}}' data-id={{customer.id}}>
+                                            <th scope="row">
+                                                {{customer.account.full_name}}
+                                            </th>
+                                            <td>
+                                                {% if customer.appointments|length > 0 %}
+                                                {%set appointment = customer.appointments[-1]%}
+                                                {{ appointment.service.name }} on {{ appointment.bay.bay }} <br>
+                                                {{ appointment.start_time.strftime("%a %b %d, %Y") }}
+                                                {{ appointment.start_time.strftime("%I:%M%p") }} - {{ appointment.end_time.strftime("%I:%M%p") }}
+                                                {% endif %}                                
+                                            </td>
+                                            <td>
+                                                {% if customer.appointments|length > 0 %}
+                                                {% for staff in appointment.staffs %}
+                                                    {{ staff.account.full_name }} <br>
+                                                {% endfor %}                                      
+                                                {% endif %}                                
+                                            </td>
+                                            <td class="text-right">
+                                                <a href="/admin/customer/{{customer.id}}" class="btn btn-info btn-sm text-white"><i class="fa fa-eye"></i></a>
+                                                <button onclick='Edit(this)' class="btn btn-warning btn-sm"><i class="fa fa-edit"></i></button>
+                                                <button onclick='Delete(this)' class="btn btn-danger btn-sm"><i class="fa fa-trash"></i></button>
+                                            </td>
+                                        </tr>
+                                    {% endif %}                                
                                 {% endfor %}                                
                             </tbody>
                         </table>
@@ -217,7 +268,7 @@ Customer Records
 
     var modal = '#modal-default'
 
-    var AddNew = function() {
+    var NewCustomer = function() {
         
         $('#first_name_error').html('')
         $('#last_name_error').html('')
@@ -227,20 +278,11 @@ Customer Records
         $('#password_error').html('')
         $('#address_error').html('')
 
-        $('#id').val('-1')
-        $('#first_name').val('')
-        $('#middle_name').val('')
-        $('#last_name').val('')
-        $('#email').val('')
-        $('#phone_1').val('')
-        $('#phone_2').val('')
-        
+        $("input").val('')
         $(".selectpicker").selectpicker('deselectAll');
         $(".selectpicker").selectpicker('val', []);
-
-        $('#password').val('')
-        $('#birth_date').val('')
-        $('#address').val('')
+        $('#id').val('-1')
+        $('#account_id').val('-1')
 
         $(modal).modal({ 
             "backdrop"  : "static",
@@ -262,6 +304,8 @@ Customer Records
 
         data = {
             'id'            : $('#id').val(),
+            'account_id'    : $('#account_id').val(),
+            'role_id'       : 3,
             'first_name'    : $('#first_name').val(),
             'middle_name'   : $('#middle_name').val(),
             'last_name'     : $('#last_name').val(),
@@ -271,7 +315,7 @@ Customer Records
             'gender'        : $('#gender').val(),
             'password'      : $('#password').val(),
             'birth_date'    : $('#birth_date').val(),
-            'address'       : $('#address').val(),
+            'address'       : $('#address').val()
         }
 
         Controller.POST('/api/customer/upsert', data).done(function(result) {
@@ -280,7 +324,6 @@ Customer Records
 
             if (result.success == true) {
                 location.reload()
-
             }
             else {
 
@@ -311,18 +354,19 @@ Customer Records
         
         Controller.GET('/api/customer/get/' + id, {}).done(function(result) {
 
-            console.log(result)
+            result = result.data
 
-            $('#id').val(result.data.id)
-            $('#first_name').val(result.data.account.first_name)
-            $('#middle_name').val(result.data.account.middle_name)
-            $('#last_name').val(result.data.account.last_name)
-            $('#email').val(result.data.account.email)
-            $('#phone_1').val(result.data.account.phone_1)
-            $('#phone_2').val(result.data.account.phone_2)
-            $("#gender").selectpicker('val', result.data.account.gender)
-            $('#birth_date').val(result.data.account.birth_date)
-            $('#address').val(result.data.account.address)
+            $('#id').val(result.id)
+            $('#account_id').val(result.account.id)
+            $('#first_name').val(result.account.first_name)
+            $('#middle_name').val(result.account.middle_name)
+            $('#last_name').val(result.account.last_name)
+            $('#email').val(result.account.email)
+            $('#phone_1').val(result.account.phone_1)
+            $('#phone_2').val(result.account.phone_2)
+            $("#gender").selectpicker('val', result.account.gender)
+            $('#birth_date').val(result.account.birth_date)
+            $('#address').val(result.account.address)
 
             $(modal).modal({
                 "backdrop"  : "static",
