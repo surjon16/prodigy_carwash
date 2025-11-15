@@ -107,7 +107,8 @@ def serialize_customer(c) -> Dict[str, Any]:
         "is_senior": getattr(c, "is_senior", False),
         "created_at": _iso(getattr(c, "created_at", None)),
         "updated_at": _iso(getattr(c, "updated_at", None)),
-        "account": serialize_account(account) if account else None
+        "account": serialize_account(account) if account else None,
+        "vehicles": [serialize_vehicle(v) for v in (getattr(c, "vehicles", []) or [])],
     }
 
 
@@ -122,7 +123,8 @@ def serialize_staff(s) -> Dict[str, Any]:
         "is_on_shift": getattr(s, "is_on_shift", False),
         "created_at": _iso(getattr(s, "created_at", None)),
         "updated_at": _iso(getattr(s, "updated_at", None)),
-        "account": serialize_account(account) if account else None
+        "account": serialize_account(account) if account else None,
+        "schedules": [serialize_schedule(s) for s in (getattr(s, "schedules", []) or [])],
     }
 
 
@@ -134,6 +136,7 @@ def serialize_schedule(s) -> Dict[str, Any]:
         "id": getattr(s, "id", None),
         "staff_id": getattr(s, "staff_id", None),
         "day": getattr(s, "day", None),
+        "shift": getattr(s, "shift", None),
         "shift_start": getattr(s, "shift_start").isoformat() if getattr(s, "shift_start", None) else None,
         "shift_end": getattr(s, "shift_end").isoformat() if getattr(s, "shift_end", None) else None,
         "created_at": _iso(getattr(s, "created_at", None)),
@@ -164,7 +167,7 @@ def serialize_service(svc) -> Dict[str, Any]:
 def serialize_vehicle(v) -> Dict[str, Any]:
     if v is None:
         return {}
-    owner = getattr(v, "owner", None)
+    # owner = getattr(v, "owner", None)
     return {
         "id": getattr(v, "id", None),
         "plate_number": getattr(v, "plate_number", None),
@@ -173,7 +176,7 @@ def serialize_vehicle(v) -> Dict[str, Any]:
         "customer_id": getattr(v, "customer_id", None),
         "created_at": _iso(getattr(v, "created_at", None)),
         "updated_at": _iso(getattr(v, "updated_at", None)),
-        "owner": serialize_customer(owner) if owner else None
+        # "owner": serialize_customer(owner) if owner else None
     }
 
 
@@ -453,6 +456,34 @@ def api_get_all_staffs():
     except Exception as e:
         current_app.logger.exception("api_get_all_staffs error")
         return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@api.route('/staff/set/schedules', methods=['POST'])
+def api_set_staff_schedules():
+    data = get_request_data()
+    try:
+        result = set_staff_schedules(data)
+        if result in (False, None):
+            return jsonify({'success': False, 'message': 'Failed to set schedules'}), 400
+        return jsonify({'success': True, 'data': result})
+    except Exception as e:
+        current_app.logger.exception("api_set_staff_schedules error")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@api.route('/staff/set/shift', methods=['POST'])
+def api_set_staff_shift():
+    data = get_request_data()
+    print(data)
+    try:
+        result = upsert_staff(data)
+        if result in (False, None):
+            return jsonify({'success': False, 'message': 'Failed to set shift'}), 400
+        return jsonify({'success': True, 'data': result})
+    except Exception as e:
+        current_app.logger.exception("api_set_staff_shift error")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 
 
 @api.route('/staff/upsert', methods=['POST'])

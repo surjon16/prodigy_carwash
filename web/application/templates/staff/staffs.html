@@ -4,90 +4,87 @@
 {% endblock %}
 
 {% block css %}
+<style>
+#staff-schedules td {
+    padding: 4px 8px;
+}
+</style>
 {% endblock %}
 
 
 {% block modal %}
-<div class="modal fade" id="modal-schedule>
+<div class="modal fade" id="modal-default">
     <div class="modal-dialog">
         <div class="modal-content card bg-secondary shadow">
-            <div class="modal-header card-header bg-white border-0">
-                <h4 class="card-title" id="modal-booking-title">Schedule</h4>
-                <button type="button" class="close" data-dismiss="modal">&times;</button>
-            </div>
-            <div class="modal-body card-body">
-                <div class="row">
-                    <div class="col-md-12">
-                        <div class="form-group">
-                            <label class="form-control-label">
-                                Staff
-                            </label>
-                            <select required id="staff_id" name="staff_id" 
-                                    data-style="bg-03 px-4 py-3" class="form-control selectpicker" 
-                                    data-live-search="true" data-max-options="1"">
-                                <option value="" disabled selected>Select an existing staff</option>
-                                {% for i in data.staffs %}
-                                    <option value="{{i.id}}">{{i.account.full_name}}</option>
-                                {% endfor %}
-                            </select>
+                <div class="modal-header card-header bg-white border-0">
+                    <h4 class="card-title">Account Information</h4>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body card-body">
+                    <div class="row">
+                        <input id="id" name="id" type="text" class="form-control form-control-alternative" hidden value="-1">
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label class="form-control-label">First Name <span id="first_name_error" class="h5 text-danger"></span></label>
+                                <input id="first_name" name="first_name" type="text" class="form-control form-control-alternative">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label class="form-control-label">Middle Name</label>
+                                <input id="middle_name" name="middle_name" type="text" class="form-control form-control-alternative">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label class="form-control-label">Last Name <span id="last_name_error" class="h5 text-danger"></span></label>
+                                <input id="last_name" name="last_name" type="text" class="form-control form-control-alternative">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label class="form-control-label">Email <span id="email_error" class="h5 text-danger"></span></label>
+                                <input id="email" name="email" type="text" class="form-control form-control-alternative">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label class="form-control-label">Phone <span id="phone_1_error" class="h5 text-danger"></span></label>
+                                <input id="phone_1" name="phone_1" type="text" class="form-control form-control-alternative">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label class="form-control-label">Emergency Contact Number <span id="phone_2_error" class="h5 text-danger"></span></label>
+                                <input id="phone_2" name="phone_2" type="text" class="form-control form-control-alternative">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label class="form-control-label">Address <span id="address_error" class="h5 text-danger"></span></label>
+                                <input id="address" name="address" type="text" class="form-control form-control-alternative">
+                            </div>
                         </div>
                     </div>
                 </div>
-                <div class="row">
-                    <div class="col-md-12">
-                        <div class="form-group">
-                        <label class="form-control-label">Vehicle ID</label>
-                        <select required id="vehicle_id" name="vehicle_id"
-                                data-style="bg-white px-4 py-3 shadow-sm" class="form-control selectpicker"
-                                data-live-search="true" data-max-options="1"
-                                onchange="UpdateVehicleTypeOptions(this)">
-                            <option value="" disabled selected>Select a vehicle type first</option>
-                        </select>
-                        </div>
-                    </div>
+                <div class="modal-footer">
+                    <button class="btn btn-sm btn-danger" data-dismiss="modal">Cancel</button>
+                    <button class="btn btn-sm btn-success" onclick="Save()">Save</button>
                 </div>
-                <div class="row">
-                    <div class="col-md-12">
-                        <div class="form-group">
-                        <label class="form-control-label">Vehicle Type</label>
-                        <select required id="vehicle_type" name="vehicle_type"
-                                data-style="bg-white px-4 py-3 shadow-sm" class="form-control selectpicker"
-                                data-live-search="true" data-max-options="1"
-                                onchange="UpdateServiceOptions(this)">
-                            <option value="" disabled selected>Select an option</option>
-                            {% for i in data.services|map(attribute='type')|unique|list %}
-                            <option value="{{ i }}">{{ i }}</option>
-                            {% endfor %}
-                        </select>
-                        </div>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-md-12">
-                        <div class="form-group">
-                        <label class="form-control-label">Service</label>
-                        <select required id="service_id" name="service_id"
-                                data-style="bg-white px-4 py-3 shadow-sm" class="form-control selectpicker"
-                                data-live-search="true" data-max-options="1" onchange="CheckAppointments()">
-                            <option value="" disabled selected>Select a vehicle type first</option>
-                        </select>
-                        </div>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-md-12">
-                        <div class="form-group">
-                            <label for="appointment_date" class="form-control-label">Appointment Date</label>
-                            <input class="form-control form-control-alternative" type="datetime-local" id="appointment_date" onchange="CheckAppointments()">
-                        </div>
-                        <span id="appointment_date_error" class="text-danger"></span>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-md btn-danger" data-dismiss="modal">Cancel</button>
-                <button id="save_quick_book" class="btn btn-md btn-success" onclick="SaveQuickBook()">BOOK NOW</button>
-            </div>
         </div>
     </div>
 </div>
@@ -114,17 +111,21 @@
             <div class="col">
                 <div class="card">
                     <div class="card-header border-0">
-                        <button type="submit" class="btn btn-primary m-0 float-right" onclick="NewSchedule()">New Schedule</button>
                         <div class="nav-wrapper">
                             <ul class="nav nav-pills" id="tabs-icons-text" role="tablist">
                                 <li class="nav-item">
-                                    <a class="nav-link mb-sm-3 mb-md-0 active" id="tabs-icons-text-1-tab" data-toggle="tab" href="#tabs-icons-text-1" role="tab" aria-controls="tabs-icons-text-1" aria-selected="true" onclick="scrollToCurrentTime()">
-                                        <i class="ni ni-badge mr-2"></i>On Duty
+                                    <a class="nav-link mb-sm-3 mb-md-0 active" id="tabs-icons-text-1-tab" data-toggle="tab" href="#tabs-icons-text-1" role="tab" aria-controls="tabs-icons-text-1" aria-selected="true">
+                                        <i class="ni ni-circle-08 mr-2"></i>On Duty
                                     </a>
                                 </li>
                                 <li class="nav-item">
                                     <a class="nav-link mb-sm-3 mb-md-0" id="tabs-icons-text-2-tab" data-toggle="tab" href="#tabs-icons-text-2" role="tab" aria-controls="tabs-icons-text-2" aria-selected="true">
                                         <i class="ni ni-calendar-grid-58 mr-2"></i>Shift / Schedule
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link mb-sm-3 mb-md-0" id="tabs-icons-text-3-tab" data-toggle="tab" href="#tabs-icons-text-3" role="tab" aria-controls="tabs-icons-text-2" aria-selected="true">
+                                        <i class="ni ni-single-copy-04 mr-2"></i>Staff Information
                                     </a>
                                 </li>
                             </ul>
@@ -171,7 +172,6 @@
                                             <table class="table align-items-center table-hover table-bordered">
                                                 <thead class="thead-light">
                                                     <tr>
-                                                        <th scope="col"></th>
                                                         <th scope="col">Staff</th>
                                                         {% for day in data.days %}
                                                             <th scope="col">{{day}}</th>
@@ -181,9 +181,6 @@
                                                 <tbody>
                                                     {% for schedule in data.schedules %}
                                                     <tr id="staff-{{schedule.staff_id}}" data-id={{schedule.staff_id}}>
-                                                        <td>
-                                                            <button onclick='Edit(this)' class="btn btn-warning btn-sm"><i class="fa fa-edit"></i></button>
-                                                        </td>
                                                         <td>
                                                             {{ schedule.staff_name }}
                                                         </td>
@@ -215,6 +212,69 @@
                                             </table>
                                         </div>
                                     </div>
+                                    
+                                    <div class="tab-pane fade" id="tabs-icons-text-3" role="tabpanel" aria-labelledby="tabs-icons-text-3-tab">
+                                        
+                                        <div class="row">
+                                            <div class="col-md-8">
+                                                <div class="card m-0">
+                                                    <div class="card-header">Staff Information</div>
+                                                    <div class="table-responsive table-hover">
+                                                        <!-- Projects table -->
+                                                        <table class="table align-items-center table-flush">
+                                                            <thead class="thead-light">
+                                                                <tr>
+                                                                    <th scope="col">Full Name</th>
+                                                                    <th scope="col">Front Desk</th>
+                                                                    <th scope="col">Is On Shift</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                {% for staff in data.staffs %}
+                                                                    <tr id='staff-{{staff.id}}' data-id={{staff.id}} onclick="GetSchedule(this)" ondblclick="Edit(this)">
+                                                                        <th scope="row">
+                                                                            {{staff.account.full_name}}
+                                                                        </th>
+                                                                        <td>
+                                                                            <input onchange="ToggleFrontDesk(this)" id="check-{{staff.id}}" data-id="{{staff.id}}" type="checkbox" 
+                                                                                {% if staff.is_front_desk %} checked {% endif %}>
+                                                                        </td>
+                                                                        <td>
+                                                                            <input onchange="ToggleShift(this)" id="check-{{staff.id}}" data-id="{{staff.id}}" type="checkbox" 
+                                                                                {% if staff.is_on_shift %} checked {% endif %}>
+                                                                        </td>
+                                                                    </tr>
+                                                                {% endfor %}
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="card m-0">
+                                                    <div class="card-header">Schedule
+                                                        <button class="btn btn-primary btn-sm m-0 float-right" onclick="SaveSchedule()">Save</button>
+                                                    </div>
+                                                    <div class="table-responsive">
+                                                        <!-- Projects table -->
+                                                        <table class="table align-items-center table-flush">
+                                                            <thead class="thead-light">
+                                                                <tr>
+                                                                    <th scope="col"></th>
+                                                                    <th scope="col">Day</th>
+                                                                    <th scope="col">Start</th>
+                                                                    <th scope="col">End</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody id="staff-schedules">
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -230,22 +290,202 @@
 {% block scripts %}
 
 <script>
-  const SERVICES = null;
-  const VEHICLES = null;
-</script>
 
-<script>
+    setSideBar('#menu-staffs');
 
-    setSideBar('#menu-schedules');
-    const modal = '#modal-schedule';
+    staff_id = 0
 
-    var Edit = function(e) {
+    var GetSchedule = function(e) {
 
-        id = e.parentNode.parentNode.dataset.id
-        Controller.GET('/api/')
+        id = e.dataset.id
+        staff_id = id
 
+        LoadSchedule(id)
+
+    }
+
+    var LoadSchedule = function(id) {
+        
+        Controller.GET('/api/staff/get/'+id, {}).done(function(result){
+            result = result.data;
+            const tbody = document.querySelector("#staff-schedules");
+            tbody.innerHTML = "";
+            days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+            days.forEach(day => {
+                const tr = document.createElement("tr");
+                has_match = false
+                result.schedules.forEach(sched => {
+                    if (day == sched.day) {
+                        has_match = true
+                        tr.innerHTML = `
+                            <td>          
+                                <input type="checkbox" checked>
+                            </td>
+                            <td>${sched.day}</td>
+                            <td>
+                                <input type="time" 
+                                    class="form-control form-control-sm" 
+                                    value="${sched.shift_start}">
+                            </td>
+                            <td>
+                                <input type="time" 
+                                    class="form-control form-control-sm" 
+                                    value="${sched.shift_end}">
+                            </td>
+                            <td hidden>${sched.id}</td>
+                        `;
+                    }
+                });
+                if (!has_match) {
+                    tr.innerHTML = `
+                            <td>          
+                                <input type="checkbox">
+                            </td>
+                            <td>${day}</td>
+                            <td>
+                                <input type="time" 
+                                    class="form-control form-control-sm" 
+                                    value="">
+                            </td>
+                            <td>
+                                <input type="time" 
+                                    class="form-control form-control-sm" 
+                                    value="">
+                            </td>
+                            <td hidden>-1</td>
+                        `;
+                }
+                tbody.appendChild(tr);
+            })
+            
+        })
+
+    }
+
+    var SaveSchedule = function() {
+
+        const rows = document.querySelectorAll("#staff-schedules tr");
+        const data = [];
+        errors = ""
+
+        rows.forEach(row => {
+
+            const set   = row.querySelector("td:nth-child(1) input").checked;
+            const day   = row.querySelector("td:nth-child(2)").textContent.trim();
+            const start = row.querySelector("td:nth-child(3) input").value; // already "HH:MM"
+            const end   = row.querySelector("td:nth-child(4) input").value; // already "HH:MM"
+            const id    = row.querySelector("td:nth-child(5)").textContent.trim();
+
+            if (set && end <= start) errors += `${day} `
+            
+            data.push({
+                set: set,
+                day: day,
+                shift_start: start,
+                shift_end: end,
+                staff_id: staff_id,
+                id: id
+            });
+
+        });
+
+        if (errors) {
+            bootbox.alert('End time must be after start time.')
+        }
+        else 
+            Controller.POST_JSON('/api/staff/set/schedules', {'schedules': data}).done(function(result) {
+                LoadSchedule(staff_id)
+            })
+
+    }
+
+    var ToggleShift = function(e) {
+        data = {
+            'id': e.dataset.id,
+            'is_on_shift': e.checked
+        }
+        Controller.POST('/api/staff/upsert', data).done(function(result) {
+            console.log(result)
+        })
+    }
+
+    var ToggleFrontDesk = function(e) {
+        data = {
+            'id': e.dataset.id,
+            'is_front_desk': e.checked
+        }
+        Controller.POST('/api/staff/upsert', data).done(function(result) {
+            console.log(result)
+        })
     }
 
 </script>
 
+<script>
+
+    var modal = '#modal-default'
+
+    var Save = function() {
+        
+        data = {
+            'id'            : $('#id').val(),
+            'first_name'    : $('#first_name').val(),
+            'middle_name'   : $('#middle_name').val(),
+            'last_name'     : $('#last_name').val(),
+            'email'         : $('#email').val(),
+            'phone_1'       : $('#phone_1').val(),
+            'phone_2'       : $('#phone_2').val(),
+            'address'       : $('#address').val(),
+        }
+
+        Controller.POST('/api/account/upsert', data).done(function(result) {
+            console.log(result)
+            if (result.success == true) {
+                location.reload()
+            }
+        })
+
+    }
+
+    var Edit = function(e) {
+
+        $('#first_name').val('')
+        $('#middle_name').val('')
+        $('#last_name').val('')
+        $('#email').val('')
+        $('#phone_1').val('')
+        $('#phone_2').val('')
+        $('#address').val('')
+        
+        $(".selectpicker").selectpicker('deselectAll');
+        $(".selectpicker").selectpicker('val', []);
+
+        id = e.dataset.id
+        
+        Controller.GET('/api/staff/get/' + id, {}).done(function(result) {
+
+            console.log(result)
+
+            result = result.data.account
+
+            $('#id').val(result.id)
+            $('#first_name').val(result.first_name)
+            $('#middle_name').val(result.middle_name)
+            $('#last_name').val(result.last_name)
+            $('#email').val(result.email)
+            $('#phone_1').val(result.phone_1)
+            $('#phone_2').val(result.phone_2)
+            $('#address').val(result.address)
+
+            $(modal).modal({
+                "backdrop"  : "static",
+                "keyboard"  : true,
+                "show"      : true
+            })
+
+        })
+        
+    }
+
+</script>
 {% endblock %}

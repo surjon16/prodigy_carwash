@@ -251,12 +251,36 @@
             </div>
             <div class="modal-body card-body">
                 <div class="row">
+                    <div class="col-md-12">                            
+                        <label class="form-control-label">Payments</label>
+                    </div>
+                    <div class="col-md-12">
+                        <div class="table-responsive">
+                            <table id="paymentsTable" class="table align-items-center table-flush">
+                                <thead>
+                                    <tr>
+                                        <th>Payment Date</th>
+                                        <th>Method</th>
+                                        <th>Amount</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="paymentsBody">
+                                    <tr>
+                                        <td colspan="4" style="text-align: center;">Loading...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
                     <div class="col-md-12">
                         <div class="form-group">
                             <label class="form-control-label">Set Status</label>
                             <select required id="status_id" name="status_id"
-                                    data-style="bg-white px-4 py-3 shadow-sm" class="form-control selectpicker"
-                                    data-live-search="true" data-max-options="1">
+                                    data-style="bg-white px-4 py-3 shadow-sm" 
+                                    class="form-control selectpicker"
+                                    data-max-options="1">
                                 {% for status in data.status %}
                                     <option value="{{status.id}}">{{status.status}}</option>
                                 {% endfor %}
@@ -304,11 +328,6 @@
                                     </a>
                                 </li>
                                 <li class="nav-item">
-                                    <a class="nav-link mb-sm-3 mb-md-0" id="tabs-icons-text-2-tab" data-toggle="tab" href="#tabs-icons-text-2" role="tab" aria-controls="tabs-icons-text-2" aria-selected="true">
-                                        <i class="ni ni-badge mr-2"></i>Staff On Duty
-                                    </a>
-                                </li>
-                                <li class="nav-item">
                                     <a class="nav-link mb-sm-3 mb-md-0" id="tabs-icons-text-3-tab" data-toggle="tab" href="#tabs-icons-text-3" role="tab" aria-controls="tabs-icons-text-3" aria-selected="false">
                                         <i class="ni ni-calendar-grid-58 mr-2"></i>Upcoming
                                     </a>
@@ -339,7 +358,9 @@
                                                             {% set display_hour = 12 %}
                                                         {% endif %}
                                                         {% set am_pm = "AM" if hour < 12 else "PM" %}
-                                                        <div class="timeline-hour">{{ display_hour }}:00 {{ am_pm }}</div>
+                                                        <div class="timeline-hour">
+                                                            {{ display_hour }}:00 {{ am_pm }}
+                                                        </div>
                                                     {% endfor %}
                                                 </div>
 
@@ -387,39 +408,6 @@
                                         </div>
                                     </div>
 
-                                    <div class="tab-pane fade" id="tabs-icons-text-2" role="tabpanel" aria-labelledby="tabs-icons-text-2-tab">
-                                        <div class="table-responsive">
-                                            <!-- Projects table -->
-                                            <table class="table align-items-center table-hover table-bordered">
-                                                <thead class="thead-light">
-                                                    <tr>
-                                                        <th scope="col">Staff</th>
-                                                        <th scope="col">Shift</th>
-                                                        <th scope="col">Front Desk</th>
-                                                        <th scope="col">Is On Duty</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    {% for staff in data.staffs %}
-                                                        <tr>
-                                                            <td>
-                                                                {{ staff.full_name }}
-                                                            </td>
-                                                            <td>
-                                                                {{ staff.shift }}
-                                                            </td>
-                                                            <td>
-                                                                {{ staff.is_front_desk }}
-                                                            </td>
-                                                            <td>
-                                                                {{ staff.is_on_shift }}
-                                                            </td>
-                                                        </tr>
-                                                    {% endfor %}
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
                                     <div class="tab-pane fade" id="tabs-icons-text-3" role="tabpanel" aria-labelledby="tabs-icons-text-3-tab">
                                         <div class="table-responsive">
                                             <!-- Projects table -->
@@ -472,7 +460,6 @@
             </div>
         </div>
     </div>
-
 </div>
 {% endblock %}
 
@@ -488,7 +475,6 @@ setSideBar('#menu-appointments');
 
 let isEditing = false; // flag to know if we're editing or creating
 const modal = '#modal-booking';
-const modal_status = '#modal-status';
 const bookButton = document.getElementById('save_quick_book');
 
 const formFields = {
@@ -498,50 +484,6 @@ const formFields = {
     service: document.getElementById('service_id'),
     date: document.getElementById('appointment_date')
 };
-
-// ---------------------------
-// UTILITIES
-// ---------------------------
-function updateCurrentTimeLine() {
-    const line = document.getElementById('currentTimeLine');
-    const container = document.getElementById('timelineContainer');
-    if (!line || !container) return;
-
-    const now = new Date();
-    const hours = now.getHours() + now.getMinutes() / 60 + now.getSeconds() / 3600;
-    const topPx = hours * 60; // 1 hour = 60px height
-    line.style.top = `${topPx}px`;
-
-    return topPx;
-}
-
-function scrollToCurrentTime() {
-    const container = document.getElementById('timelineContainer');
-    const topPx = updateCurrentTimeLine();
-    if (!container || topPx === undefined) return;
-    
-    container.scrollTo({ top: topPx - 100, behavior: 'smooth' });
-
-    // // Center current time line vertically
-    // const scrollPosition = Math.max(topPx - container.clientHeight / 3, 0);
-    // container.scrollTo({
-    //     top: scrollPosition,
-    //     behavior: 'smooth'
-    // });
-}
-
-// Initial position & scroll
-window.addEventListener('DOMContentLoaded', () => {
-    scrollToCurrentTime();
-    $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
-    if (e.target.id === "tabs-icons-text-1-tab") {
-      scrollToCurrentTime();
-    }
-  });
-});
-
-// Update every minute to keep the red line accurate
-setInterval(updateCurrentTimeLine, 60000);
 
 function isFormValid() {
     return (
@@ -573,33 +515,6 @@ function QuickBook() {
     openQuickBookModal();
 }
 
-function AppointmentStatus(element = null) {
-    $(modal_status).modal({
-        backdrop: 'static',
-        keyboard: true,
-        show: true
-    });
-
-    $('#appointment_id').val(element.dataset.appointmentId)
-    $('.selectpicker').selectpicker('refresh');
-    $("#status_id").selectpicker('val', element.dataset.statusId)
-
-}
-
-function SaveStatus() {
-    data = {
-        'appointment_id': $('#appointment_id').val(),
-        'status_id': $('#status_id').val()
-    }
-    console.log(data)
-    Controller.POST('/api/appointment/set/status', data).done(function(result) {
-        if (result.success) {
-            $(modal).modal('hide');
-            location.reload();
-        }
-    });
-}
-
 function openQuickBookModal(element = null) {
     $(modal).modal({
         backdrop: 'static',
@@ -612,7 +527,20 @@ function openQuickBookModal(element = null) {
     formFields.vehicle.innerHTML = '<option value="" disabled selected>Select a vehicle</option>';
     formFields.vehicleType.selectedIndex = 0;
     formFields.service.innerHTML = '<option value="" disabled selected>Select a vehicle type first</option>';
-    formFields.date.value = '';
+
+    
+    // Create a new Date object for the current time
+    const now = new Date();
+
+    // Adjust for the timezone offset to get local time
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+
+    // Format the date and time to the required "YYYY-MM-DDTHH:MM" format
+    // slice(0, 16) extracts the first 16 characters (YYYY-MM-DDTHH:MM)
+    const formattedDatetime = now.toISOString().slice(0, 16);
+
+    // Set the value of the datetime-local input
+    formFields.date.value = formattedDatetime;
     $('.selectpicker').selectpicker('refresh');
 
     // If element is passed, edit existing appointment
@@ -789,6 +717,47 @@ function SaveQuickBook() {
         }
     });
 }
+
+</script>
+
+<script>
+    
+// ---------------------------
+// UTILITIES
+// ---------------------------
+function updateCurrentTimeLine() {
+    const line = document.getElementById('currentTimeLine');
+    const container = document.getElementById('timelineContainer');
+    if (!line || !container) return;
+
+    const now = new Date();
+    const hours = now.getHours() + now.getMinutes() / 60 + now.getSeconds() / 3600;
+    const topPx = hours * 60; // 1 hour = 60px height
+    line.style.top = `${topPx}px`;
+
+    return topPx;
+}
+
+function scrollToCurrentTime() {
+    const container = document.getElementById('timelineContainer');
+    const topPx = updateCurrentTimeLine();
+    if (!container || topPx === undefined) return;
+    container.scrollTo({ top: topPx - 100, behavior: 'smooth' });
+}
+
+// Initial position & scroll
+window.addEventListener('DOMContentLoaded', () => {
+    scrollToCurrentTime();
+    $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+    if (e.target.id === "tabs-icons-text-1-tab") {
+      scrollToCurrentTime();
+    }
+  });
+});
+
+// Update every minute to keep the red line accurate
+setInterval(updateCurrentTimeLine, 60000);
+
 // ---------------------------
 // REAL-TIME VALIDATION EVENTS
 // ---------------------------
@@ -796,6 +765,101 @@ Object.values(formFields).forEach(field => {
     field.addEventListener('change', toggleBookButton);
     field.addEventListener('input', toggleBookButton);
 });
+
+</script>
+
+<script>
+    
+const modal_status = '#modal-status';
+
+function AppointmentStatus(element = null) {
+    
+    const tbody = document.getElementById("paymentsBody");
+    tbody.innerHTML = "";  // clear previous rows
+
+    $(modal_status).modal({
+        backdrop: 'static',
+        keyboard: true,
+        show: true
+    });
+    
+    Controller.GET('/api/appointment/get/'+element.dataset.appointmentId, {}).done(function(result) {
+        console.log(result)
+
+        payments = result.data.payments
+        service = result.data.service
+
+        if (payments.length === 0) {
+            row = document.createElement("tr");
+            row.innerHTML = `
+                <td colspan="3" style="text-align: center;">No records found</td>
+            `;
+            tbody.appendChild(row);
+            row = document.createElement("tr");
+            row.innerHTML = `
+                <td colspan="2" style="text-align: right; border: 1px solid #e9ecef;">Service Cost</td>
+                <td style="text-align: right; border: 1px solid #e9ecef;">${parseFloat(service.price).toFixed(2)}</td>
+            `;
+            tbody.appendChild(row);
+
+            return;
+        }
+
+        total_payment = 0;
+
+        payments.forEach(item => {
+            const row = document.createElement("tr");
+
+            row.innerHTML = `
+                <td style="border: 1px solid #e9ecef;">${new Date(item.created_at).toLocaleString()}</td>
+                <td style="border: 1px solid #e9ecef;">${item.method}</td>
+                <td style="text-align: right; border: 1px solid #e9ecef;">${parseFloat(item.amount).toFixed(2)}</td>
+            `;
+
+            tbody.appendChild(row);
+            total_payment += item.amount;
+        });
+
+        row = document.createElement("tr");
+        row.innerHTML = `
+            <td colspan="3" style="border: 1px solid #e9ecef;"></td>
+        `;
+        tbody.appendChild(row);
+        row = document.createElement("tr");
+        row.innerHTML = `
+            <td colspan="2" style="text-align: right; border: 1px solid #e9ecef;">Service Cost</td>
+            <td style="text-align: right; border: 1px solid #e9ecef;">${parseFloat(service.price).toFixed(2)}</td>
+        `;
+        tbody.appendChild(row);
+
+        row = document.createElement("tr");
+        row.innerHTML = `
+            <td colspan="2" style="text-align: right; border: 1px solid #e9ecef;">Balance</td>
+            <td style="text-align: right; border: 1px solid #e9ecef;">${parseFloat(service.price - total_payment).toFixed(2)}</td>
+        `;
+        tbody.appendChild(row);
+
+    });
+
+    $('#appointment_id').val(element.dataset.appointmentId)
+    $('.selectpicker').selectpicker('refresh');
+    $("#status_id").selectpicker('val', element.dataset.statusId)
+
+}
+
+function SaveStatus() {
+    data = {
+        'appointment_id': $('#appointment_id').val(),
+        'status_id': $('#status_id').val()
+    }
+    console.log(data)
+    Controller.POST('/api/appointment/set/status', data).done(function(result) {
+        if (result.success) {
+            $(modal).modal('hide');
+            location.reload();
+        }
+    });
+}
 
 </script>
 

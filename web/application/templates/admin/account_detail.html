@@ -40,19 +40,19 @@ Account Information
                                     <div class="col-md-4">
                                         <div class="form-group">
                                             <label class="form-control-label">First Name</label>
-                                            <input type="text" class="form-control" value="{{account.first_name}}">
+                                            <input type="text" class="form-control" value="{{account.first_name | default('') }}">
                                         </div>
                                     </div>
                                     <div class="col-md-4">
                                         <div class="form-group">
                                             <label class="form-control-label">Middle Name</label>
-                                            <input type="text" class="form-control" value="{{account.middle_name}}">
+                                            <input type="text" class="form-control" value="{{account.middle_name | default('') }}">
                                         </div>
                                     </div>
                                     <div class="col-md-4">
                                         <div class="form-group">
                                             <label class="form-control-label">Last Name</label>
-                                            <input type="text" class="form-control" value="{{account.last_name}}">
+                                            <input type="text" class="form-control" value="{{account.last_name | default('') }}">
                                         </div>
                                     </div>
                                 </div>
@@ -61,13 +61,13 @@ Account Information
                                         <div class="form-group">
                                             <label class="form-control-label">Birthdate</label>
                                             <input type="text" class="form-control"
-                                                value="{{ account.birth_date.strftime('%m/%d/%Y') if account.birth_date is not none else None }}">
+                                                value="{{ account.birth_date.strftime('%m/%d/%Y') if account.birth_date is not none else '' }}">
                                         </div>
                                     </div>
                                     <div class="col-md-4">
                                         <div class="form-group">
                                             <label class="form-control-label">Gender</label>
-                                            <input type="text" class="form-control" value="{{account.gender}}">
+                                            <input type="text" class="form-control" value="{{account.gender | default('') }}">
                                         </div>
                                     </div>
                                 </div>
@@ -75,19 +75,19 @@ Account Information
                                     <div class="col-md-4">
                                         <div class="form-group">
                                             <label class="form-control-label">Email</label>
-                                            <input type="text" class="form-control" value="{{account.email}}">
+                                            <input type="text" class="form-control" value="{{account.email | default('') }}">
                                         </div>
                                     </div>
                                     <div class="col-md-4">
                                         <div class="form-group">
                                             <label class="form-control-label">Phone</label>
-                                            <input type="text" class="form-control" value="{{account.phone_1}}">
+                                            <input type="text" class="form-control" value="{{account.phone_1 | default('') }}">
                                         </div>
                                     </div>
                                     <div class="col-md-4">
                                         <div class="form-group">
                                             <label class="form-control-label">Emergency Contact Number</label>
-                                            <input type="text" class="form-control" value="{{account.phone_2}}">
+                                            <input type="text" class="form-control" value="{{account.phone_2 | default('') }}">
                                         </div>
                                     </div>
                                 </div>
@@ -97,7 +97,7 @@ Account Information
                                     <div class="col-md-8">
                                         <div class="form-group">
                                             <label class="form-control-label">Address</label>
-                                            <input type="text" class="form-control" value="{{account.address}}">
+                                            <input type="text" class="form-control" value="{{account.address | default('') }}">
                                         </div>
                                     </div>
                                 </div>

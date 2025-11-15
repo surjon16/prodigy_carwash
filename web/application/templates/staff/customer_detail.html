@@ -1,4 +1,4 @@
-{% extends 'shared/layout.html' %}
+{% extends 'staff/shared/layout.html' %}
 {% block title %}
 Customer Information
 {% endblock %}
@@ -16,18 +16,6 @@ Customer Information
             <div class="modal-body card-body">
                 <div class="row">
                     <input id="id" name="id" type="text" class="form-control form-control-alternative" hidden value="-1">
-                </div>
-                <div class="row">
-                    <div class="col-md-12">
-                        <div class="form-group">
-                            <label class="form-control-label">Roles <span id="role_id_error"
-                                    class="h5 text-danger"></span></label>
-                            <select id="role_id" name="role_id" data-style="bg-white px-4 py-3 shadow-sm"
-                                class="form-control form-control-alternative selectpicker" data-live-search="true">
-                                <option value="3" selected>Member (Resident)</option>
-                            </select>
-                        </div>
-                    </div>
                 </div>
                 <div class="row">
                     <div class="col-md-12">
@@ -79,18 +67,6 @@ Customer Information
                 <div class="row">
                     <div class="col-md-12">
                         <div class="form-group">
-                            <label class="form-control-label">Password 
-                                <span style="font-weight: 100">(leave blank to remain unchanged)</span> 
-                                <span id="password_error" class="h5 text-danger"></span>
-                            </label>
-                            <input id="password" name="password" name="password" type="password"
-                                class="form-control form-control-alternative">
-                        </div>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-md-12">
-                        <div class="form-group">
                             <label class="form-control-label">Birthdate</label>
                             <input id="birth_date" name="birth_date" type="text"
                                 class="form-control form-control-alternative datepicker">
@@ -105,21 +81,6 @@ Customer Information
                                 class="form-control form-control-alternative selectpicker" data-live-search="true">
                                 <option value="Male">Male</option>
                                 <option value="Female">Female</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-md-12">
-                        <div class="form-group">
-                            <label class="form-control-label">Civil Status</label>
-                            <select id="civil" name="civil" data-style="bg-white px-4 py-3 shadow-sm"
-                                class="form-control form-control-alternative selectpicker" data-live-search="true">
-                                <option value="Single">Single</option>
-                                <option value="Married">Married</option>
-                                <option value="Separated">Separated</option>
-                                <option value="Widowed">Widowed</option>
-                                <option value="Widower">Widower</option>
                             </select>
                         </div>
                     </div>

@@ -33,5 +33,16 @@ var Controller = {
             cache: false,
             complete: function () {}
         });
+    },
+    POST_JSON: function (_url, _data) {
+        return $.ajax({
+            url: _url,
+            type: 'POST',
+            data: JSON.stringify(_data),
+            contentType: 'application/json',
+            dataType: 'json',
+            cache: false,
+            complete: function () {}
+        });
     }
 }

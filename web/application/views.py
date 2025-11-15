@@ -66,7 +66,8 @@ def admin_required(f):
 def staff_required(f):
     @wraps(f)
     def wrapper(*args, **kwargs):
-        if not current_user.is_authenticated or current_user.role_id != 2:
+        if not current_user.is_authenticated or current_user.role_id != 2 or not current_user.staff.is_front_desk:
+            flash('Account not authorized.', 'danger')
             return redirect(url_for('login'))
         return f(*args, **kwargs)
     return wrapper
@@ -102,7 +103,6 @@ def login():
         user = login_account(request.form)
         if user:
             login_user(user)
-            flash('Login successful.', 'success')
             return redirect(url_for('home'))
         flash('Invalid email or password.', 'danger')
     return render_template('common/login.html')
@@ -172,8 +172,11 @@ def admin_customers():
 @login_required
 @admin_required
 def admin_customer_details(id):
-    customer = get_customer(id)
-    return render_template('admin/customer_detail.html', customer=customer)
+    data = {
+        'customer'  : get_customer(id),
+        'services'  : get_services()
+    }
+    return render_template('admin/customer_detail.html', data=data)
 
 
 @app.route('/admin/appointments', endpoint='admin_appointments')
@@ -282,12 +285,24 @@ def staff_staffs():
     }
     return render_template('staff/staffs.html', data=data)
 
-@app.route('/staff/account/<int:id>', endpoint='staff_account_details')
+
+@app.route('/staff/customers', endpoint='staff_customers')
 @login_required
 @staff_required
-def staff_account_details(id):
-    account = get_account(id)
-    return render_template('staff/account_detail.html', account=account)
+def staff_customers():
+    data = get_customers()
+    return render_template('staff/customers.html', customers=data)
+
+
+@app.route('/staff/customer/<int:id>', endpoint='staff_customer_details')
+@login_required
+@staff_required
+def staff_customer_details(id):
+    data = {
+        'customer'  : get_customer(id),
+        'services'  : get_services()
+    }
+    return render_template('staff/customer_detail.html', data=data)
 
 @app.route('/staff/feedbacks', endpoint='staff_feedbacks')
 @login_required

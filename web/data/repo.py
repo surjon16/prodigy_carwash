@@ -344,6 +344,26 @@ def get_staff(staff_id: int) -> Optional[Staffs]:
     return Staffs.query.filter_by(id=staff_id).first()
 
 
+def set_staff_schedules(request: Dict[str, Any]) -> Union[Schedules, bool, None]:
+    response = []
+    schedules = request.get('schedules')
+    try:
+        if schedules:
+            for sched in schedules:
+                if sched.get('set'):
+                    if upsert_schedule(sched) in (False, None): response.append(False)
+                else:
+                    if int(sched.get('id')) > 0: # delete existing schedule
+                        if delete_schedule(sched) in (False, None): response.append(False)
+
+    except Exception as e:
+        db.session.rollback()
+        logger.exception("set_staff_schedules failed")
+        return False 
+    
+    return False not in response
+
+
 def create_staff(request: Dict[str, Any]) -> Optional[Staffs]:
     """
     Create a staff. Accepts 'account_id' or 'account' dict for linked account creation.
@@ -383,8 +403,8 @@ def upsert_staff(request: Dict[str, Any]) -> Optional[Staffs]:
                 raise ValueError("Staff doesn't exist")
             request['id'] = staff.account_id
             upsert_account(request)
-            staff.is_front_desk = request.get('is_front_desk', staff.is_front_desk)
-            staff.is_on_shift = request.get('is_on_shift', staff.is_on_shift)
+            staff.is_front_desk =  staff.is_front_desk if not request.get("is_front_desk") else str(request.get("is_front_desk")).lower() == "true"
+            staff.is_on_shift = staff.is_on_shift if not request.get("is_on_shift") else str(request.get("is_on_shift")).lower() == "true"
             if request.get('account_id'):
                 staff.account_id = request.get('account_id')
             db.session.commit()
@@ -449,8 +469,8 @@ def upsert_schedule(request: Dict[str, Any]) -> Union[Schedules, bool, None]:
         staff_id = int(request.get('staff_id'))
 
         # parse time strings
-        shift_start = _parse_time(request.get('shift_start')) or time(8, 0)
-        shift_end = _parse_time(request.get('shift_end')) or time(17, 0)
+        shift_start = request.get('shift_start')
+        shift_end = request.get('shift_end')
         day = request.get('day')
 
         if sched_id > 0:
@@ -458,8 +478,8 @@ def upsert_schedule(request: Dict[str, Any]) -> Union[Schedules, bool, None]:
             if not sched:
                 return None
             sched.staff_id = staff_id or sched.staff_id
-            sched.shift_start = shift_start
-            sched.shift_end = shift_end
+            sched.shift_start = shift_start or time(8, 0)
+            sched.shift_end = shift_end or time(16, 0)
             sched.day = day or sched.day
             db.session.commit()
             logger.debug("Updated schedule id=%s", sched.id)
@@ -467,8 +487,8 @@ def upsert_schedule(request: Dict[str, Any]) -> Union[Schedules, bool, None]:
         else:
             sched = Schedules(
                 staff_id=staff_id,
-                shift_start=shift_start,
-                shift_end=shift_end,
+                shift_start=shift_start or time(8, 0),
+                shift_end=shift_end or time(16, 0),
                 day=day
             )
             db.session.add(sched)
@@ -1329,13 +1349,13 @@ def get_available_bay_and_staff(start_time, duration, washers_needed, recursion_
     # Pre-compute each staff’s workload (number of appointments today)
     for staff in all_staff:
         staff.daily_appointments = sum(
-            1 for a in staff.appointments if a.start_time and a.start_time.date() == now.date() and a.status.id != 5 # Cancelled
+            1 for a in staff.appointments if a.start_time and a.start_time.date() == now.date() and a.status.id not in [4, 5] # Completed or Cancelled
         )
 
     # Pre-compute each bay’s workload (number of appointments today)
     for bay in all_bays:
         bay.daily_appointments = sum(
-            1 for a in bay.appointments if a.start_time and a.start_time.date() == now.date() and a.status.id != 5 # Cancelled
+            1 for a in bay.appointments if a.start_time and a.start_time.date() == now.date() and a.status.id not in [4, 5] # Completed or Cancelled
         )
 
     # Sort staff so those with fewer appointments are prioritized
@@ -1351,7 +1371,7 @@ def get_available_bay_and_staff(start_time, duration, washers_needed, recursion_
 
         # Check if bay is busy during this time slot
         bay_busy = any(
-            bay_appointment.start_time < end_time and bay_appointment.end_time > start_time and bay_appointment.status.id != 5 # Cancelled
+            bay_appointment.start_time < end_time and bay_appointment.end_time > start_time and bay_appointment.status.id not in [4, 5] # Completed or Cancelled
             for bay_appointment in bay.appointments
         )
         if bay_busy:
@@ -1376,7 +1396,7 @@ def get_available_bay_and_staff(start_time, duration, washers_needed, recursion_
 
             # Check overlapping appointments
             overlapping = any(
-                staff_appointment.start_time <= end_time and staff_appointment.end_time >= start_time and staff_appointment.status.id != 5 # Cancelled
+                staff_appointment.start_time <= end_time and staff_appointment.end_time >= start_time and staff_appointment.status.id not in [4, 5] # Completed or Cancelled
                 for staff_appointment in staff.appointments
             )
             if not overlapping:
