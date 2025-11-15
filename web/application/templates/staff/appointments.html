@@ -276,6 +276,15 @@
                 <div class="row">
                     <div class="col-md-12">
                         <div class="form-group">
+                            <label class="form-control-label">Set Amount</label>
+                            <input id="amount" name="amount" type="number" step="0.01"
+                                class="form-control form-control-alternative" value="0">
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="form-group">
                             <label class="form-control-label">Set Status</label>
                             <select required id="status_id" name="status_id"
                                     data-style="bg-white px-4 py-3 shadow-sm" 
@@ -332,6 +341,11 @@
                                         <i class="ni ni-calendar-grid-58 mr-2"></i>Upcoming
                                     </a>
                                 </li>
+                                <!-- <li class="nav-item">
+                                    <a class="nav-link mb-sm-3 mb-md-0" id="tabs-icons-text-2-tab" data-toggle="tab" href="#tabs-icons-text-2" role="tab" aria-controls="tabs-icons-text-3" aria-selected="false">
+                                        <i class="ni ni-money-coins mr-2"></i>Payments
+                                    </a>
+                                </li> -->
                             </ul>
                         </div>
                         <div class="card">
@@ -452,6 +466,50 @@
                                             </table>
                                         </div>
                                     </div>
+<!--                                     
+                                    <div class="tab-pane fade" id="tabs-icons-text-2" role="tabpanel" aria-labelledby="tabs-icons-text-2-tab">
+                                        <div class="table-responsive">
+                                            <table class="table align-items-center table-flush">
+                                                <thead class="thead-light">
+                                                    <tr>
+                                                        <th scope="col">Date & Time</th>
+                                                        <th scope="col">Bay - Service</th>
+                                                        <th scope="col">Customer - Vehicle</th>
+                                                        <th scope="col">Assignee</th>
+                                                        <th scope="col">Status</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% for appointment in data.upcoming | sort(attribute="start_time") %}
+                                                        <tr>
+                                                            <th scope="row">
+                                                                {{ appointment.start_time.strftime("%I:%M%p") }} - {{ appointment.end_time.strftime("%I:%M%p") }}
+                                                                <br>
+                                                                {{ appointment.start_time.strftime("%a %b %d, %Y") }} 
+                                                            </th>
+                                                            <td>
+                                                                {{ appointment.bay.bay }} <i class="fa fa-arrow-right"></i> {{ appointment.service.name }} ({{ appointment.service.type }})
+                                                            </td>
+                                                            <td>
+                                                                {{ appointment.customer.account.full_name }}
+                                                                {% if appointment.vehicle.plate_number %}
+                                                                    <br> {{ appointment.vehicle.plate_number }} {{ appointment.vehicle.model }}
+                                                                {% endif %}
+                                                            </td>
+                                                            <td>
+                                                                {% for staff in appointment.staffs %}
+                                                                    {{ staff.account.full_name }} <br>
+                                                                {% endfor %}
+                                                            </td>
+                                                            <td>
+                                                                {{ appointment.status.status }}
+                                                            </td>
+                                                        </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div> -->
                                 </div>
                             </div>
                         </div>
@@ -848,17 +906,24 @@ function AppointmentStatus(element = null) {
 }
 
 function SaveStatus() {
-    data = {
+    Controller.POST('/api/appointment/set/status', {
         'appointment_id': $('#appointment_id').val(),
         'status_id': $('#status_id').val()
-    }
-    console.log(data)
-    Controller.POST('/api/appointment/set/status', data).done(function(result) {
-        if (result.success) {
+    }).done(function(result) {
+        
+        Controller.POST('/api/payment/upsert', {
+            'id': -1,
+            'appointment_id': $('#appointment_id').val(),
+            'amount': $('#amount').val()
+        }).done(function(result) {
+            
             $(modal).modal('hide');
             location.reload();
-        }
+
+        });
+
     });
+    
 }
 
 </script>

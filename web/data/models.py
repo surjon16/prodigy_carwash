@@ -262,7 +262,7 @@ class Payments(db.Model):
 
     # Foreign key
     appointment_id = db.Column(db.Integer, db.ForeignKey('appointments.id'), nullable=False)
-    status_id = db.Column(db.Integer, db.ForeignKey('status.id'), nullable=False)
+    status_id = db.Column(db.Integer, db.ForeignKey('status.id'), nullable=True)
 
     # relationships
     appointment = db.relationship('Appointments', back_populates='payments')

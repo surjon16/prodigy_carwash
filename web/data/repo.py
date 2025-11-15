@@ -790,6 +790,10 @@ def upsert_payment(request: Dict[str, Any]) -> Union[Payments, bool]:
     Create or update a payment. Returns Payments instance or False on error.
     """
     try:
+        amount = float(request.get('amount'))
+        if amount <= 0:
+            return True
+        
         pay_id = int(request.get('id'))
         if pay_id > 0:
             pay = Payments.query.filter_by(id=pay_id).first()
@@ -805,7 +809,7 @@ def upsert_payment(request: Dict[str, Any]) -> Union[Payments, bool]:
             return pay
         else:
             pay = Payments(
-                method=request.get('method'),
+                method=request.get('method', 'cash'),
                 transaction_no=request.get('transaction_no'),
                 image_payment=request.get('image_payment'),
                 amount=request.get('amount'),

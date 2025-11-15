@@ -27,3 +27,17 @@ class Appointment:
             db.session.rollback()
             return False
         
+    def add_payment(appointment_id: int, amount: float) -> None:
+        """Update the status of an appointment."""
+        try:
+            appointment = Appointments.query.filter_by(id=appointment_id).first()
+            if not appointment:                
+                return None
+            if amount > 0:
+                appointment.payments.extend(Payments(amount=amount))
+                db.session.commit()
+            return appointment
+        except Exception as e:
+            db.session.rollback()
+            return False
+        
