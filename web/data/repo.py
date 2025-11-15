@@ -750,8 +750,7 @@ def get_total_revenue_today() -> float:
     today = date.today()
     payments = (Payments.query
                 .filter(
-                    cast(Payments.created_at, Date) == today,
-                    Payments.status_id == 9
+                    cast(Payments.created_at, Date) == today
                 )
                 .order_by(Payments.created_at)
                 .all())
@@ -772,8 +771,7 @@ def get_total_revenue_this_month() -> float:
     payments = (Payments.query
                 .filter(
                     cast(Payments.created_at, Date) >= start_of_month,
-                    cast(Payments.created_at, Date) <= end_of_month,
-                    Payments.status_id == 9
+                    cast(Payments.created_at, Date) <= end_of_month
                 )
                 .order_by(Payments.created_at)
                 .all())
